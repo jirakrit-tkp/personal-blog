@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import 'tailwindcss'
+import { Button } from './components/ui/button'
 
 function App() {
   const [count, setCount] = useState(0)

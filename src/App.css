@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 #root {
   /* max-width: 1280px; */
@@ -41,4 +44,4 @@
 
 .read-the-docs {
   color: #888;
-} */
+}
