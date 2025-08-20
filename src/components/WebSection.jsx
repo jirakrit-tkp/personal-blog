@@ -1,4 +1,12 @@
-import { LinkedinIcon, Github, Mail, Search } from 'lucide-react';
+import { LinkedinIcon, Github, Mail, Search, AlignJustify } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function NavBar() {
     return (
@@ -9,13 +17,34 @@ export function NavBar() {
         </div>
   
         {/* <!-- Buttons --> */}
-        <div className="flex items-center space-x-[8px]">
+        <div className="flex items-center space-x-[8px] max-sm:hidden">
           <button className="px-4 py-1.5 border border-neutral-800 text-neutral-800 rounded-full text-sm">
             Log in
           </button>
           <button className="px-4 py-1.5 bg-neutral-900 text-white rounded-full text-sm">
             Sign up
           </button>
+        </div>
+        
+        {/* <!-- Buttons Mobile --> */}
+        <div className="sm:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><AlignJustify /></DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[100vw] border-0 rounded-none">
+              <div className="space-y-4 p-2">
+                <DropdownMenuItem className="hover:bg-transparent p-0">
+                  <button className="w-full px-4 py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm">
+                    Log in
+                  </button>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-transparent p-0">
+                  <button className="w-full px-4 py-3 bg-neutral-900 text-white rounded-full text-sm">
+                    Sign up
+                  </button>
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </nav>
     )
