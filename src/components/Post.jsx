@@ -19,7 +19,7 @@ function Post({ post, loading }) {
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto">
         {/* Hero Image */}
-        <div className="w-full h-auto mb-8 px-0 sm:px-6 lg:px-8">
+        <div className="w-full h-auto pt-8 mb-8 px-0 sm:px-6 lg:px-8">
           <img 
             src={post.image} 
             alt={post.title}
