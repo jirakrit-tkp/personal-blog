@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Link } from 'react-router-dom';
 
 export function NavBar() {
     return (
@@ -134,12 +135,12 @@ export function Footer() {
                     
                     {/* Right side - "Home page" link */}
                     <div>
-                        <a 
-                            href="#" 
+                        <Link 
+                            to={"/"}
                             className="text-neutral-800 underline hover:text-neutral-600 transition-colors text-sm"
                         >
                             Home page
-                        </a>
+                        </Link >
                     </div>
                 </div>
             </div>
