@@ -7,10 +7,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Link } from 'react-router-dom';
 
 export function NavBar() {
     return (
-      <nav className="flex flex-row justify-between items-center px-6 py-4 bg-neutral-50">
+      <nav className="flex flex-row justify-between items-center px-6 py-4 bg-neutral-50 border-b border-neutral-200">
         {/* <!-- Logo --> */}
         <div className="text-lg font-semibold text-neutral-800">
           hh.
@@ -18,12 +19,18 @@ export function NavBar() {
   
         {/* <!-- Buttons --> */}
         <div className="flex items-center space-x-[8px] max-sm:hidden">
-          <button className="px-4 py-1.5 border border-neutral-800 text-neutral-800 rounded-full text-sm">
+          <Link 
+            to="/login"
+            className="px-4 py-1.5 border border-neutral-800 text-neutral-800 rounded-full text-sm hover:bg-neutral-100 transition-colors"
+          >
             Log in
-          </button>
-          <button className="px-4 py-1.5 bg-neutral-900 text-white rounded-full text-sm">
+          </Link>
+          <Link 
+            to="/signup"
+            className="px-4 py-1.5 bg-neutral-900 text-white rounded-full text-sm hover:bg-neutral-800 transition-colors"
+          >
             Sign up
-          </button>
+          </Link>
         </div>
         
         {/* <!-- Buttons Mobile --> */}
@@ -33,14 +40,20 @@ export function NavBar() {
             <DropdownMenuContent className="w-[100vw] border-0 rounded-none">
               <div className="space-y-4 p-2">
                 <DropdownMenuItem className="hover:bg-transparent p-0">
-                  <button className="w-full px-4 py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm">
+                  <Link 
+                    to="/login"
+                    className="w-full px-4 py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm hover:bg-neutral-100 transition-colors block text-center"
+                  >
                     Log in
-                  </button>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:bg-transparent p-0">
-                  <button className="w-full px-4 py-3 bg-neutral-900 text-white rounded-full text-sm">
+                  <Link 
+                    to="/signup"
+                    className="w-full px-4 py-3 bg-neutral-900 text-white rounded-full text-sm hover:bg-neutral-800 transition-colors block text-center"
+                  >
                     Sign up
-                  </button>
+                  </Link>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
@@ -97,7 +110,7 @@ export function HeroSection() {
 export function Footer() {
     return (
         <footer className="bg-neutral-100">
-            <div className="bg-neutral-50 px-6 py-4">
+            <div className="bg-neutral-200 px-6 py-4">
                 <div className="flex justify-between items-center">
                     {/* Left side - Flex container with "Get in touch" and social icons */}
                     <div className="flex items-center space-x-6">
@@ -134,12 +147,12 @@ export function Footer() {
                     
                     {/* Right side - "Home page" link */}
                     <div>
-                        <a 
-                            href="#" 
+                        <Link 
+                            to={"/"}
                             className="text-neutral-800 underline hover:text-neutral-600 transition-colors text-sm"
                         >
                             Home page
-                        </a>
+                        </Link >
                     </div>
                 </div>
             </div>

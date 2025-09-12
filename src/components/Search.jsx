@@ -1,0 +1,150 @@
+import { useState, useEffect, useRef } from 'react';
+import { Search as SearchIcon } from 'lucide-react';
+import axios from 'axios';
+
+function Search({ onSearch, onSelectPost, selectedFilter }) {
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const searchRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Search suggestions from API
+  useEffect(() => {
+    if (query.length > 0) {
+      setLoading(true);
+      
+      // Fetch search suggestions from API
+      const searchPosts = async () => {
+        try {
+          const queryParams = new URLSearchParams();
+          queryParams.append('keyword', query.trim());
+          queryParams.append('page', '1');
+          queryParams.append('limit', '10'); // Limit to 10 suggestions
+          
+          // Add category filter if not "Highlight"
+          if (selectedFilter && selectedFilter !== 'Highlight') {
+            queryParams.append('category', selectedFilter);
+          }
+          
+          const url = `https://blog-post-project-api.vercel.app/posts?${queryParams.toString()}`;
+          const response = await axios.get(url);
+          
+          const posts = response.data.posts || [];
+          const titles = posts.map(post => post.title);
+          
+          setSuggestions(titles);
+          setIsOpen(true);
+        } catch (error) {
+          console.error('Error fetching search suggestions:', error);
+          setSuggestions([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Debounce search
+      const timeoutId = setTimeout(searchPosts, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSuggestions([]);
+      setIsOpen(false);
+    }
+  }, [query, selectedFilter]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleInputChange = (e) => {
+    setQuery(e.target.value);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setQuery(suggestion);
+    setIsOpen(false);
+    onSelectPost?.(suggestion);
+  };
+
+  const handleSearch = () => {
+    if (query.trim()) {
+      onSearch?.(query);
+      setIsOpen(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative w-full max-w-lg">
+      {/* Search Input */}
+      <div className="relative">
+        <input
+          ref={searchRef}
+          type="text"
+          value={query}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Search articles..."
+          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <button
+          onClick={handleSearch}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        >
+          <SearchIcon className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Search Suggestions Dropdown */}
+      {isOpen && (
+        <div
+          ref={dropdownRef}
+          className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
+        >
+          {loading ? (
+            <div className="p-4 text-center text-gray-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-sm">Searching...</p>
+            </div>
+          ) : suggestions.length > 0 ? (
+            <ul className="py-2">
+              {suggestions.map((suggestion, index) => (
+                <li key={index}>
+                  <button
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                  >
+                    <span className="text-gray-900">{suggestion}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : query.length > 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              <p className="text-sm">No articles found for "{query}"</p>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Search;

@@ -1,14 +1,25 @@
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { useState } from 'react';
 import { LinkedinIcon, Github, Mail, Search } from 'lucide-react';
-import { blogPosts } from '@/data/blogPosts';
+import { Link } from 'react-router-dom';
+import { useArticles } from '@/hooks/useArticles';
+import SearchComponent from './Search';
 
 function ArticleSection() {
-    const [selectedFilter, setSelectedFilter] = useState('Highlight');
-    
-    const filters = ['Highlight', 'Cat', 'Inspiration', 'General'];
-    const articles = blogPosts;
+    const {
+        articles: blogPosts,
+        categories: filters,
+        loading,
+        loadingMore,
+        hasMore,
+        selectedFilter,
+        searchKeyword,
+        postsPerPage,
+        updateFilter,
+        updateSearchKeyword,
+        loadMoreArticles,
+        setPostsPerPage
+    } = useArticles();
     
     return (
         <section className="py-12 px-8">
@@ -26,7 +37,7 @@ function ArticleSection() {
                                 {filters.map((filter) => (
                                     <button
                                         key={filter}
-                                        onClick={() => setSelectedFilter(filter)}
+                                        onClick={() => updateFilter(filter)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                             selectedFilter === filter
                                                 ? 'bg-neutral-200 text-neutral-800'
@@ -39,12 +50,11 @@ function ArticleSection() {
                             </div>
                             
                             {/* Right side - Search */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={16} />
-                                <Input 
-                                    type="text" 
-                                    placeholder="Search" 
-                                    className="pl-10 pr-4 py-2 w-64 bg-white border-neutral-200 focus:border-neutral-400"
+                            <div className="w-80">
+                                <SearchComponent 
+                                    onSearch={(query) => updateSearchKeyword(query)}
+                                    onSelectPost={(title) => updateSearchKeyword(title)}
+                                    selectedFilter={selectedFilter}
                                 />
                             </div>
                         </div>
@@ -54,12 +64,11 @@ function ArticleSection() {
                     <div className="lg:hidden bg-neutral-100 rounded-lg p-4 mb-8">
                         <div className="space-y-4">
                             {/* Search Input */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={16} />
-                                <Input 
-                                    type="text" 
-                                    placeholder="Search" 
-                                    className="pl-10 pr-4 py-2 w-full bg-white border-neutral-200 focus:border-neutral-400"
+                            <div className="w-full">
+                                <SearchComponent 
+                                    onSearch={(query) => updateSearchKeyword(query)}
+                                    onSelectPost={(title) => updateSearchKeyword(title)}
+                                    selectedFilter={selectedFilter}
                                 />
                             </div>
                             
@@ -69,7 +78,7 @@ function ArticleSection() {
                             </div>
                             
                             {/* Category Select */}
-                            <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                            <Select value={selectedFilter} onValueChange={updateFilter}>
                                 <SelectTrigger className="w-full bg-white border-neutral-200 focus:border-neutral-400">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
@@ -84,12 +93,67 @@ function ArticleSection() {
                         </div>
                     </div>
 
-                    {/* Articles Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {articles.map((article) => (
-                            <BlogCard key={article.id} {...article} />
-                        ))}
-                    </div>
+                    {/* Posts Grid */}
+                    {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[...Array(4)].map((_, index) => (
+                                <LoadingCard key={index} />
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {blogPosts.map((article) => (
+                                    <BlogCard key={article.id} {...article} />
+                                ))}
+                            </div>
+                            
+                            {/* Loading indicator when loading more */}
+                            {loadingMore && (
+                                <div className="mt-6 text-center">
+                                    <div className="inline-flex items-center gap-2 text-gray-500">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700"></div>
+                                        <span className="text-sm">Loading more posts...</span>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* View More Controls */}
+                    {!loading && blogPosts.length > 0 && (
+                        <div className="mt-8 flex flex-col items-center gap-6">
+                            {/* View More button - Centered and Bigger */}
+                            <button
+                                onClick={loadMoreArticles}
+                                disabled={!hasMore || loadingMore}
+                                className={`px-8 py-3 text-base font-semibold rounded-lg transition-colors ${
+                                    hasMore && !loadingMore
+                                        ? 'bg-gray-600 text-white hover:bg-gray-700'
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                                {loadingMore ? 'Loading...' : hasMore ? 'View More' : 'No more posts'}
+                            </button>
+
+                            {/* Posts per page selector - Smaller and below */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">Show:</span>
+                                <Select value={postsPerPage.toString()} onValueChange={(value) => setPostsPerPage(parseInt(value))}>
+                                    <SelectTrigger className="w-16 h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="3">3</SelectItem>
+                                        <SelectItem value="6">6</SelectItem>
+                                        <SelectItem value="9">9</SelectItem>
+                                        <SelectItem value="12">12</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <span className="text-xs text-gray-500">posts per page</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
         </section>
     )
@@ -98,19 +162,19 @@ function ArticleSection() {
 function BlogCard(props) {
     return (
         <div className="flex flex-col gap-4">
-          <a href="#" className="relative h-[212px] sm:h-[360px]">
+          <Link to={`/post/${props.id}`} className="relative h-[212px] sm:h-[360px]">
             <img className="w-full h-full object-cover rounded-md" src={props.image} alt={props.title}/>
-          </a>
+          </Link>
           <div className="flex flex-col">
             <div className="flex">
               <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">{props.category}
               </span>
             </div>
-            <a href="#" >
+            <Link to={`/post/${props.id}`}>
               <h2 className="text-start font-bold text-xl mb-2 line-clamp-2 hover:underline">
               {props.title}
               </h2>
-            </a>
+            </Link>
             <p className="text-muted-foreground text-sm mb-4 flex-grow line-clamp-3">
             {props.description}</p>
             <div className="flex items-center text-sm">
@@ -123,4 +187,41 @@ function BlogCard(props) {
         </div>
       );
 }
+
+function LoadingCard() {
+    return (
+        <div className="flex flex-col gap-4 animate-pulse">
+            {/* Image skeleton */}
+            <div className="h-[212px] sm:h-[360px] bg-gray-200 rounded-md flex items-center justify-center">
+                <span className="text-gray-400 text-sm">Loading...</span>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+                {/* Category skeleton */}
+                <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+                
+                {/* Title skeleton */}
+                <div className="space-y-2">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                
+                {/* Description skeleton */}
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+                
+                {/* Author info skeleton */}
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    <div className="h-4 bg-gray-200 rounded w-16"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default ArticleSection

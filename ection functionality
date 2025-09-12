@@ -1,0 +1,34 @@
+[1mdiff --git a/src/App.jsx b/src/App.jsx[m
+[1mindex 217e115..12a1221 100644[m
+[1m--- a/src/App.jsx[m
+[1m+++ b/src/App.jsx[m
+[36m@@ -1,19 +1,17 @@[m
+[31m-import { useState } from 'react'[m
+[31m-import reactLogo from './assets/react.svg'[m
+[31m-import viteLogo from '/vite.svg'[m
+[32m+[m[32mimport { BrowserRouter as Router, Routes, Route } from 'react-router-dom'[m
+ import './App.css'[m
+[31m-import { Button } from './components/ui/button'[m
+[31m-import { NavBar, HeroSection, Footer} from './components/WebSection.jsx'[m
+[31m-import ArticleSection from './components/ArticleSection'[m
+[32m+[m[32mimport { LandingPage, ViewPost, NotFound } from './pages'[m
+ [m
+ function App() {[m
+   return ([m
+[31m-    <>[m
+[31m-      <NavBar />[m
+[31m-      <HeroSection />[m
+[31m-      <ArticleSection />[m
+[31m-      <Footer />[m
+[31m-    </>[m
+[32m+[m[32m    <Router>[m
+[32m+[m[32m      <Routes>[m
+[32m+[m[32m        <Route path="/" element={<LandingPage />} />[m
+[32m+[m[32m        <Route path="/post/:id" element={<ViewPost />} />[m
+[32m+[m[32m        <Route path="*" element={<NotFound />} />[m
+[32m+[m[32m        {/* Add more routes here as needed */}[m
+[32m+[m[32m      </Routes>[m
+[32m+[m[32m    </Router>[m
+   )[m
+ }[m
+ [m
