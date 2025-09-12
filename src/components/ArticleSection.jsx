@@ -1,109 +1,24 @@
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { useState, useEffect } from 'react';
 import { LinkedinIcon, Github, Mail, Search } from 'lucide-react';
-import { blogPosts } from '@/data/blogPosts';
-import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { useArticles } from '@/hooks/useArticles';
 
 function ArticleSection() {
-    const [selectedFilter, setSelectedFilter] = useState('Highlight');
-    const [searchKeyword, setSearchKeyword] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [postsPerPage, setPostsPerPage] = useState(6);
-    const [blogPosts, setBlogPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [loadingMore, setLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-
-    const getPosts = async (isLoadMore = false) => {
-        try {
-            if (isLoadMore) {
-                setLoadingMore(true);
-            } else {
-                setLoading(true);
-            }
-            
-            // สร้าง query parameters
-            const params = new URLSearchParams();
-            
-            // เพิ่ม category ถ้าไม่ใช่ Highlight
-            if (selectedFilter !== 'Highlight') {
-                params.append('category', selectedFilter);
-            }
-            
-            // เพิ่ม keyword ถ้ามีการค้นหา
-            if (searchKeyword.trim()) {
-                params.append('keyword', searchKeyword.trim());
-            }
-            
-            // เพิ่ม page และ limit
-            params.append('page', currentPage.toString());
-            params.append('limit', postsPerPage.toString());
-            
-            // สร้าง URL
-            const url = `https://blog-post-project-api.vercel.app/posts${params.toString() ? `?${params.toString()}` : ''}`;
-            
-            const postsData = await axios.get(url);
-            console.log(postsData);
-            
-            if (isLoadMore) {
-                // ถ้าเป็น load more ให้เพิ่มข้อมูลเข้าไปใน array เดิม
-                setBlogPosts(prev => [...prev, ...postsData.data.posts]);
-            } else {
-                // ถ้าไม่ใช่ load more ให้แทนที่ข้อมูลทั้งหมด
-                setBlogPosts(postsData.data.posts);
-            }
-            
-            // ตรวจสอบว่ามีข้อมูลต่อหรือไม่
-            setHasMore(postsData.data.posts.length === postsPerPage);
-        } catch (error) {
-            console.error('Error fetching posts:', error);
-            setBlogPosts([]);
-            setHasMore(false);
-        } finally {
-            if (isLoadMore) {
-                setLoadingMore(false);
-            } else {
-                setLoading(false);
-            }
-        }
-    }
-    console.log(blogPosts)
-
-    // Initial load
-    useEffect(() => {
-        getPosts();
-    }, []);
-
-    // Reset page เมื่อเปลี่ยน filter หรือ search
-    useEffect(() => {
-        setCurrentPage(1);
-        setHasMore(true);
-    }, [selectedFilter, searchKeyword]);
-
-    // Debounce search keyword และ filter changes
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            getPosts();
-        }, 500); // รอ 500ms หลังจากผู้ใช้หยุดพิมพ์
-
-        return () => clearTimeout(timeoutId);
-    }, [selectedFilter, searchKeyword, postsPerPage]);
-
-    // Load more เมื่อ page เปลี่ยน
-    useEffect(() => {
-        if (currentPage > 1) {
-            getPosts(true); // isLoadMore = true
-        }
-    }, [currentPage]);
-
-    // Function สำหรับ load more
-    const handleLoadMore = () => {
-        setCurrentPage(prev => prev + 1);
-    };
-    
-    const filters = ['Highlight', 'Cat', 'Inspiration', 'General'];
-    // const articles = blogPosts;
+    const {
+        articles: blogPosts,
+        categories: filters,
+        loading,
+        loadingMore,
+        hasMore,
+        selectedFilter,
+        searchKeyword,
+        postsPerPage,
+        updateFilter,
+        updateSearchKeyword,
+        loadMoreArticles,
+        setPostsPerPage
+    } = useArticles();
     
     return (
         <section className="py-12 px-8">
@@ -121,7 +36,7 @@ function ArticleSection() {
                                 {filters.map((filter) => (
                                     <button
                                         key={filter}
-                                        onClick={() => setSelectedFilter(filter)}
+                                        onClick={() => updateFilter(filter)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                             selectedFilter === filter
                                                 ? 'bg-neutral-200 text-neutral-800'
@@ -140,7 +55,7 @@ function ArticleSection() {
                                     type="text" 
                                     placeholder="Search" 
                                     value={searchKeyword}
-                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                    onChange={(e) => updateSearchKeyword(e.target.value)}
                                     className="pl-10 pr-4 py-2 w-64 bg-white border-neutral-200 focus:border-neutral-400"
                                 />
                             </div>
@@ -157,7 +72,7 @@ function ArticleSection() {
                                     type="text" 
                                     placeholder="Search" 
                                     value={searchKeyword}
-                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                    onChange={(e) => updateSearchKeyword(e.target.value)}
                                     className="pl-10 pr-4 py-2 w-full bg-white border-neutral-200 focus:border-neutral-400"
                                 />
                             </div>
@@ -168,7 +83,7 @@ function ArticleSection() {
                             </div>
                             
                             {/* Category Select */}
-                            <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                            <Select value={selectedFilter} onValueChange={updateFilter}>
                                 <SelectTrigger className="w-full bg-white border-neutral-200 focus:border-neutral-400">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
@@ -202,7 +117,7 @@ function ArticleSection() {
                             {loadingMore && (
                                 <div className="mt-6 text-center">
                                     <div className="inline-flex items-center gap-2 text-gray-500">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700"></div>
                                         <span className="text-sm">Loading more posts...</span>
                                     </div>
                                 </div>
@@ -215,11 +130,11 @@ function ArticleSection() {
                         <div className="mt-8 flex flex-col items-center gap-6">
                             {/* View More button - Centered and Bigger */}
                             <button
-                                onClick={handleLoadMore}
+                                onClick={loadMoreArticles}
                                 disabled={!hasMore || loadingMore}
                                 className={`px-8 py-3 text-base font-semibold rounded-lg transition-colors ${
                                     hasMore && !loadingMore
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                        ? 'bg-gray-600 text-white hover:bg-gray-700'
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                             >
@@ -252,19 +167,19 @@ function ArticleSection() {
 function BlogCard(props) {
     return (
         <div className="flex flex-col gap-4">
-          <a href="#" className="relative h-[212px] sm:h-[360px]">
+          <Link to={`/post/${props.id}`} className="relative h-[212px] sm:h-[360px]">
             <img className="w-full h-full object-cover rounded-md" src={props.image} alt={props.title}/>
-          </a>
+          </Link>
           <div className="flex flex-col">
             <div className="flex">
               <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">{props.category}
               </span>
             </div>
-            <a href="#" >
+            <Link to={`/post/${props.id}`}>
               <h2 className="text-start font-bold text-xl mb-2 line-clamp-2 hover:underline">
               {props.title}
               </h2>
-            </a>
+            </Link>
             <p className="text-muted-foreground text-sm mb-4 flex-grow line-clamp-3">
             {props.description}</p>
             <div className="flex items-center text-sm">
