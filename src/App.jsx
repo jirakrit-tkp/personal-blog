@@ -1,19 +1,17 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
-import { Button } from './components/ui/button'
-import { NavBar, HeroSection, Footer} from './components/WebSection.jsx'
-import ArticleSection from './components/ArticleSection'
+import { LandingPage, ViewPost, NotFound } from './pages'
 
 function App() {
   return (
-    <>
-      <NavBar />
-      <HeroSection />
-      <ArticleSection />
-      <Footer />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/post/:id" element={<ViewPost />} />
+        <Route path="*" element={<NotFound />} />
+        {/* Add more routes here as needed */}
+      </Routes>
+    </Router>
   )
 }
 
