@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { LinkedinIcon, Github, Mail, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useArticles } from '@/hooks/useArticles';
+import SearchComponent from './Search';
 
 function ArticleSection() {
     const {
@@ -49,14 +50,11 @@ function ArticleSection() {
                             </div>
                             
                             {/* Right side - Search */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={16} />
-                                <Input 
-                                    type="text" 
-                                    placeholder="Search" 
-                                    value={searchKeyword}
-                                    onChange={(e) => updateSearchKeyword(e.target.value)}
-                                    className="pl-10 pr-4 py-2 w-64 bg-white border-neutral-200 focus:border-neutral-400"
+                            <div className="w-80">
+                                <SearchComponent 
+                                    onSearch={(query) => updateSearchKeyword(query)}
+                                    onSelectPost={(title) => updateSearchKeyword(title)}
+                                    selectedFilter={selectedFilter}
                                 />
                             </div>
                         </div>
@@ -66,14 +64,11 @@ function ArticleSection() {
                     <div className="lg:hidden bg-neutral-100 rounded-lg p-4 mb-8">
                         <div className="space-y-4">
                             {/* Search Input */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={16} />
-                                <Input 
-                                    type="text" 
-                                    placeholder="Search" 
-                                    value={searchKeyword}
-                                    onChange={(e) => updateSearchKeyword(e.target.value)}
-                                    className="pl-10 pr-4 py-2 w-full bg-white border-neutral-200 focus:border-neutral-400"
+                            <div className="w-full">
+                                <SearchComponent 
+                                    onSearch={(query) => updateSearchKeyword(query)}
+                                    onSelectPost={(title) => updateSearchKeyword(title)}
+                                    selectedFilter={selectedFilter}
                                 />
                             </div>
                             
