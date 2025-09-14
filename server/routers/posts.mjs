@@ -3,57 +3,6 @@ import connectionPool from "../utils/db.mjs";
 
 const router = express.Router();
 
-// GET all posts
-router.get("/", async (req, res, next) => {
-  try {  
-    const posts = await connectionPool.query("SELECT * FROM posts ORDER BY date DESC");
-    return res.status(200).json({
-      success: true,
-      data: posts.rows || posts,
-      count: posts.rows?.length || posts.length
-    });
-  } catch (error) {
-    console.error("Database error:", error);
-    
-    return res.status(500).json({
-      success: false,
-      error: "Server could not fetch posts because database connection failed",
-      message: error.message
-    });
-  }
-});
-
-// GET single post by ID
-router.get("/:id", async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    
-    // Validate ID
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid post ID"
-      });
-    }
-    
-    const post = await connectionPool.query("SELECT * FROM posts WHERE id = $1", [id]);
-    
-    if (!post.rows || post.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Post not found"
-      });
-    }
-    
-    return res.status(200).json({
-      success: true,
-      data: post.rows[0]
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
 // POST create new post
 router.post("/", async (req, res, next) => {
   const { title, image, category_id, description, content, status_id } = req.body;
@@ -102,18 +51,53 @@ router.post("/", async (req, res, next) => {
         newPost.date, 
         newPost.likes
       ]);
-    
-    return res.status(201).json({
-      success: true,
-      message: "Created post successfully",
-      data: newPost
-    });
-    
   } catch (error) {
     console.error("Database error:", error);
     return res.status(500).json({
       success: false,
       error: "Server could not create post because database connection failed",
+      message: error.message
+    });
+  }
+  return res.status(201).json({
+    success: true,
+    message: "Created post successfully",
+    data: newPost
+  });
+});
+
+// GET single post by ID
+router.get("/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate ID
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid post ID"
+      });
+    }
+    
+    const post = await connectionPool.query("SELECT * FROM posts WHERE id = $1", [id]);
+    
+    if (!post.rows || post.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "Server could not find a requested post"
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: post.rows[0]
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Server could not read post because database connection",
       message: error.message
     });
   }
@@ -123,7 +107,7 @@ router.post("/", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title, content, author } = req.body;
+    const { title, image, category_id, description, content, status_id } = req.body;
     
     if (!id || isNaN(id)) {
       return res.status(400).json({
@@ -132,25 +116,37 @@ router.put("/:id", async (req, res, next) => {
       });
     }
     
-    const updatedPost = await connectionPool.query(
-      "UPDATE posts SET title = $1, content = $2, author = $3, updated_at = NOW() WHERE id = $4 RETURNING *",
-      [title, content, author, id]
+    // ตรวจสอบว่า post มีอยู่จริงหรือไม่ก่อนทำ UPDATE
+    const existingPost = await connectionPool.query(
+      "SELECT id FROM posts WHERE id = $1",
+      [id]
     );
     
-    if (!updatedPost.rows || updatedPost.rows.length === 0) {
+    if (!existingPost.rows || existingPost.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "Post not found"
+        error: "Server could not find a requested post to update"
       });
     }
+    
+    const updatedPost = await connectionPool.query(
+      "UPDATE posts SET title = $1, image = $2, category_id = $3, description = $4, content = $5, status_id = $6, updated_at = NOW() WHERE id = $7 RETURNING *",
+      [title, image, category_id, description, content, status_id, id]
+    );
     
     return res.status(200).json({
       success: true,
       data: updatedPost.rows[0],
-      message: "Post updated successfully"
+      message: "Updated post successfully"
     });
   } catch (error) {
-    next(error);
+    console.error("Database error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Server could not update post because database connection",
+      message: error.message
+    });
   }
 });
 
@@ -174,17 +170,99 @@ router.delete("/:id", async (req, res, next) => {
     if (!deletedPost.rows || deletedPost.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "Post not found"
+        error: "Server could not find a requested post to delete"
       });
     }
     
     return res.status(200).json({
       success: true,
       data: deletedPost.rows[0],
-      message: "Post deleted successfully"
+      message: "Deleted post successfully"
     });
   } catch (error) {
-    next(error);
+    console.error("Database error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Server could not delete post because database connection",
+      message: error.message
+    });
+  }
+});
+
+// GET all posts with query parameters
+router.get("/", async (req, res, next) => {
+  try {
+    const { page = 1, limit = 6, category, keyword } = req.query;
+    
+    // Validate parameters
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    
+    if (pageNum < 1 || limitNum < 1) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid page or limit parameter"
+      });
+    }
+    
+    // Build WHERE clause
+    let whereConditions = [];
+    let queryParams = [];
+    let paramIndex = 1;
+    
+    // Category filter
+    if (category) {
+      whereConditions.push(`category_id = $${paramIndex}`);
+      queryParams.push(category);
+      paramIndex++;
+    }
+    
+    // Keyword search
+    if (keyword) {
+      whereConditions.push(`(title ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`);
+      queryParams.push(`%${keyword}%`);
+      paramIndex++;
+    }
+    
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    
+    // Count total posts
+    const countQuery = `SELECT COUNT(*) FROM posts ${whereClause}`;
+    const countResult = await connectionPool.query(countQuery, queryParams);
+    const totalPosts = parseInt(countResult.rows[0].count);
+    
+    // Calculate pagination
+    const offset = (pageNum - 1) * limitNum;
+    const totalPages = Math.ceil(totalPosts / limitNum);
+    
+    // Get posts with pagination
+    const postsQuery = `
+      SELECT * FROM posts 
+      ${whereClause} 
+      ORDER BY date DESC 
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    queryParams.push(limitNum, offset);
+    
+    const posts = await connectionPool.query(postsQuery, queryParams);
+    
+    return res.status(200).json({
+      totalPosts: totalPosts,
+      totalPages: totalPages,
+      currentPage: pageNum,
+      limit: limitNum,
+      posts: posts.rows,
+      nextPage: pageNum < totalPages ? pageNum + 1 : null
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Server could not fetch posts because database connection failed",
+      message: error.message
+    });
   }
 });
 
