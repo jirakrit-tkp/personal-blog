@@ -1,31 +1,12 @@
 import express from "express";
 import connectionPool from "../utils/db.mjs";
+import { validateCreatePostData, validateUpdatePostData, validatePostId } from "../middlewares/post.validation.mjs";
 
 const router = express.Router();
 
 // POST create new post
-router.post("/", async (req, res, next) => {
+router.post("/", [validateCreatePostData], async (req, res) => {
   const { title, image, category_id, description, content, status_id } = req.body;
-  
-  // Validate required fields
-  const missingFields = [];
-  
-  if (!title || title.trim() === '') missingFields.push('title');
-  if (!image || image.trim() === '') missingFields.push('image');
-  if (!category_id) missingFields.push('category_id');
-  if (!description || description.trim() === '') missingFields.push('description');
-  if (!content || content.trim() === '') missingFields.push('content');
-  if (!status_id) missingFields.push('status_id');
-  
-  // Return 400 error if any required fields are missing
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      success: false,
-      error: "Server could not create post because there are missing data from client",
-      missingFields: missingFields,
-      message: `Missing required fields: ${missingFields.join(', ')}`
-    });
-  }
   
   const newPost = {
     title: title.trim(),
@@ -67,18 +48,10 @@ router.post("/", async (req, res, next) => {
 });
 
 // GET single post by ID
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", [validatePostId], async (req, res) => {
+  const { id } = req.params;
+  
   try {
-    const { id } = req.params;
-    
-    // Validate ID
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid post ID"
-      });
-    }
-    
     const post = await connectionPool.query("SELECT * FROM posts WHERE id = $1", [id]);
     
     if (!post.rows || post.rows.length === 0) {
@@ -104,18 +77,11 @@ router.get("/:id", async (req, res, next) => {
 });
 
 // PUT update post
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", [validatePostId, validateUpdatePostData], async (req, res) => {
+  const { id } = req.params;
+  const { title, image, category_id, description, content, status_id } = req.body;
+  
   try {
-    const { id } = req.params;
-    const { title, image, category_id, description, content, status_id } = req.body;
-    
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid post ID"
-      });
-    }
-    
     // ตรวจสอบว่า post มีอยู่จริงหรือไม่ก่อนทำ UPDATE
     const existingPost = await connectionPool.query(
       "SELECT id FROM posts WHERE id = $1",
@@ -151,17 +117,10 @@ router.put("/:id", async (req, res, next) => {
 });
 
 // DELETE post
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", [validatePostId], async (req, res) => {
+  const { id } = req.params;
+  
   try {
-    const { id } = req.params;
-    
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid post ID"
-      });
-    }
-    
     const deletedPost = await connectionPool.query(
       "DELETE FROM posts WHERE id = $1 RETURNING *",
       [id]
@@ -191,42 +150,42 @@ router.delete("/:id", async (req, res, next) => {
 });
 
 // GET all posts with query parameters
-router.get("/", async (req, res, next) => {
+router.get("/", async (req, res) => {
+  const { page = 1, limit = 6, category, keyword } = req.query;
+  
+  // Validate parameters
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  
+  if (pageNum < 1 || limitNum < 1) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid page or limit parameter"
+    });
+  }
+  
+  // Build WHERE clause
+  let whereConditions = [];
+  let queryParams = [];
+  let paramIndex = 1;
+  
+  // Category filter
+  if (category) {
+    whereConditions.push(`category_id = $${paramIndex}`);
+    queryParams.push(category);
+    paramIndex++;
+  }
+  
+  // Keyword search
+  if (keyword) {
+    whereConditions.push(`(title ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`);
+    queryParams.push(`%${keyword}%`);
+    paramIndex++;
+  }
+  
+  const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+  
   try {
-    const { page = 1, limit = 6, category, keyword } = req.query;
-    
-    // Validate parameters
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
-    
-    if (pageNum < 1 || limitNum < 1) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid page or limit parameter"
-      });
-    }
-    
-    // Build WHERE clause
-    let whereConditions = [];
-    let queryParams = [];
-    let paramIndex = 1;
-    
-    // Category filter
-    if (category) {
-      whereConditions.push(`category_id = $${paramIndex}`);
-      queryParams.push(category);
-      paramIndex++;
-    }
-    
-    // Keyword search
-    if (keyword) {
-      whereConditions.push(`(title ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`);
-      queryParams.push(`%${keyword}%`);
-      paramIndex++;
-    }
-    
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-    
     // Count total posts
     const countQuery = `SELECT COUNT(*) FROM posts ${whereClause}`;
     const countResult = await connectionPool.query(countQuery, queryParams);
