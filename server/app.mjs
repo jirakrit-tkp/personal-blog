@@ -12,7 +12,14 @@ const app = express();
 const port = process.env.PORT || 4001;
 
 // Basic middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://jt-personal-blog.vercel.app", // ใส่โดเมนจริงจาก Vercel
+      "http://localhost:5173",            // ใช้ตอน dev
+    ],
+  })
+);
 app.use(express.json());
 
 // API routes
