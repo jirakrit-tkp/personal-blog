@@ -2,15 +2,12 @@
 
 ## Environment Variables
 
-Create a `.env` file in the server directory with the following variables:
+Create a `.env` file in the server directory with the following variables (Supabase-based, no local Postgres needed):
 
 ```env
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=blogpost
-DB_USER=postgres
-DB_PASSWORD=your_password_here
+# Supabase Configuration
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # Server Configuration
 PORT=4001
@@ -33,5 +30,5 @@ npm run dev
 
 - `GET /` - Health check
 - `GET /profiles` - Get profiles
-- `GET /posts` - Get all posts
-- `GET /posts/:id` - Get single post by ID
+- `GET /posts` - Get all posts (Supabase)
+- `GET /posts/:id` - Get single post by ID (Supabase)

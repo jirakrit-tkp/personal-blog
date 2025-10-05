@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 export const useApi = () => {
     const [loading, setLoading] = useState(false);
@@ -15,31 +15,40 @@ export const useApi = () => {
             }
             setError(null);
 
-            // สร้าง query parameters
-            const queryParams = new URLSearchParams();
-            
-            // เพิ่ม category ถ้าไม่ใช่ Highlight
+            // คำนวณช่วงข้อมูลสำหรับ Supabase range
+            const pageNumber = Number(params.page) || 1;
+            const pageSize = Number(params.limit) || 6;
+            const from = (pageNumber - 1) * pageSize;
+            const to = from + pageSize - 1;
+
+            let query = supabase
+                .from('posts')
+                .select('*', { count: 'exact' })
+                .order('date', { ascending: false })
+                .range(from, to);
+
+            // กรองตาม category ถ้ามีและไม่ใช่ Highlight
             if (params.category && params.category !== 'Highlight') {
-                queryParams.append('category', params.category);
+                // ถ้า category เป็นตัวเลข ให้ใช้เป็น category_id
+                if (!Number.isNaN(Number(params.category))) {
+                    query = query.eq('category_id', Number(params.category));
+                }
             }
-            
-            // เพิ่ม keyword ถ้ามีการค้นหา
+
+            // ค้นหาด้วย keyword
             if (params.keyword && params.keyword.trim()) {
-                queryParams.append('keyword', params.keyword.trim());
+                const kw = `%${params.keyword.trim()}%`;
+                query = query.or(
+                    `title.ilike.${kw},description.ilike.${kw},content.ilike.${kw}`
+                );
             }
-            
-            // เพิ่ม page และ limit
-            queryParams.append('page', params.page.toString());
-            queryParams.append('limit', params.limit.toString());
-            
-            // สร้าง URL
-            const url = `https://blog-post-project-api.vercel.app/posts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-            
-            const response = await axios.get(url);
-            
+
+            const { data, error, count } = await query;
+            if (error) throw error;
+
             return {
-                data: response.data.posts || [],
-                hasMore: response.data.posts?.length === params.limit
+                data: data || [],
+                hasMore: Boolean(count && to + 1 < count)
             };
         } catch (err) {
             setError(err);
@@ -58,14 +67,15 @@ export const useApi = () => {
             setLoading(true);
             setError(null);
 
-            // สร้าง URL สำหรับ single post
-            const url = `https://blog-post-project-api.vercel.app/posts/${postId}`;
-            
-            const response = await axios.get(url);
-            
-            return {
-                data: response.data.post || response.data
-            };
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .eq('id', postId)
+                .single();
+
+            if (error) throw error;
+
+            return { data };
         } catch (err) {
             setError(err);
             throw err;
