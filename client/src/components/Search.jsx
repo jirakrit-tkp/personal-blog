@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 function Search({ onSearch, onSelectPost, selectedFilter }) {
   const [query, setQuery] = useState('');
@@ -15,24 +15,26 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
     if (query.length > 0) {
       setLoading(true);
       
-      // Fetch search suggestions from API
+      // Fetch search suggestions from Supabase
       const searchPosts = async () => {
         try {
-          const queryParams = new URLSearchParams();
-          queryParams.append('keyword', query.trim());
-          queryParams.append('page', '1');
-          queryParams.append('limit', '10'); // Limit to 10 suggestions
-          
-          // Add category filter if not "Highlight"
-          if (selectedFilter && selectedFilter !== 'Highlight') {
-            queryParams.append('category', selectedFilter);
+          let q = supabase
+            .from('posts')
+            .select('title')
+            .order('date', { ascending: false })
+            .limit(10);
+
+          if (selectedFilter && selectedFilter !== 'Highlight' && !Number.isNaN(Number(selectedFilter))) {
+            q = q.eq('category_id', Number(selectedFilter));
           }
-          
-          const url = `https://blog-post-project-api.vercel.app/posts?${queryParams.toString()}`;
-          const response = await axios.get(url);
-          
-          const posts = response.data.posts || [];
-          const titles = posts.map(post => post.title);
+
+          const kw = `%${query.trim()}%`;
+          q = q.ilike('title', kw);
+
+          const { data, error } = await q;
+          if (error) throw error;
+
+          const titles = (data || []).map(post => post.title);
           
           setSuggestions(titles);
           setIsOpen(true);
