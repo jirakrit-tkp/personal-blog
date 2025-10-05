@@ -32,8 +32,8 @@ app.get("/", (req, res) => {
   });
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`🚀 Server is running at http://localhost:${port}`);
+// ✅ Start server (ต้องใช้ '0.0.0.0')
+app.listen(port, "0.0.0.0", () => {
+  console.log(`🚀 Server is running on port ${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api`);
 });
