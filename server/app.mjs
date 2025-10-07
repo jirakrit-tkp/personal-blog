@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 
 // Import routers
 import apiRouter from "./routers/index.mjs";
+import protectUser from "./middlewares/protectUser.mjs";
+import protectAdmin from "./middlewares/protectAdmin.mjs";
 
 // Load environment variables
 dotenv.config();
@@ -37,6 +39,15 @@ app.get("/", (req, res) => {
       profiles: "/api/profiles"
     }
   });
+});
+
+// Example protected routes
+app.get("/protected-route", protectUser, (req, res) => {
+  res.json({ message: "This is protected content", user: req.user });
+});
+
+app.get("/admin-only", protectAdmin, (req, res) => {
+  res.json({ message: "This is admin-only content", admin: req.user });
 });
 
 // ✅ Start server (ต้องใช้ '0.0.0.0')

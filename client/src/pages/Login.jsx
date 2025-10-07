@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { NavBar, Footer } from '../components/WebSection';
+import { useAuth } from '../context/authentication.jsx';
 
 function Login() {
+  const { login, state } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -30,7 +32,7 @@ function Login() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -49,8 +51,10 @@ function Login() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log('Login data:', formData);
-      // Handle login logic here
+      const result = await login(formData);
+      if (result?.error) {
+        setErrors({ general: result.error });
+      }
     }
   };
 
@@ -66,6 +70,13 @@ function Login() {
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Log in</h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* General Error */}
+              {errors.general && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  {errors.general}
+                </div>
+              )}
+
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className={`block text-sm font-medium mb-2 ${errors.email ? 'text-red-600' : 'text-gray-700'}`}>
@@ -115,9 +126,10 @@ function Login() {
               {/* Log In Button */}
               <button
                 type="submit"
-                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                disabled={state.loading}
+                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Log in
+                {state.loading ? 'Logging in...' : 'Log in'}
               </button>
             </form>
 
