@@ -13,9 +13,7 @@ export function NavBar() {
     return (
       <nav className="flex flex-row justify-between items-center px-6 py-4 bg-neutral-50 border-b border-neutral-200">
         {/* <!-- Logo --> */}
-        <div className="text-lg font-semibold text-neutral-800">
-          hh.
-        </div>
+        <img src="./public/Plotline_text.svg" alt="Plotline logo" className="w-25 h-25 mx-10 -my-25"/>
   
         {/* <!-- Buttons --> */}
         <div className="flex items-center space-x-[8px] max-sm:hidden">
@@ -70,11 +68,12 @@ export function HeroSection() {
           {/* Left Section - Text Content */}
           <div className="flex flex-col space-y-6 items-center lg:items-end flex-1 text-center lg:text-end">
             <h1 className="text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight">
-              Stay<br />Informed,<br />
-              Stay Inspired
+              Every Story<br/>
+              Leaves a Trace
             </h1>
             <p className="text-lg text-neutral-700 leading-relaxed">
-              Discover a World of Knowledge at Your Fingertips. Your Daily Dose of Inspiration and Information.
+              Discover honest thoughts, weird feelings, and random rants about stories that hit too hard.
+              You’re now in Plotlines — my corner for every scene that stuck in my head.
             </p>
           </div>
   
