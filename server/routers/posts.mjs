@@ -51,7 +51,21 @@ router.get("/:id", [validatePostId], async (req, res) => {
   const { id } = req.params;
   
   try {
-    const { data: post, error } = await supabase.from('posts').select('*').eq('id', id).single();
+    // Get post with genres
+    const { data: post, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        post_genres!inner(
+          genres(
+            id,
+            name
+          )
+        )
+      `)
+      .eq('id', id)
+      .single();
+    
     if (error && error.code !== 'PGRST116') throw error;
     if (!post) {
       return res.status(404).json({
@@ -60,9 +74,16 @@ router.get("/:id", [validatePostId], async (req, res) => {
       });
     }
     
+    // Transform genres data
+    const transformedPost = {
+      ...post,
+      genres: post.post_genres?.map(pg => pg.genres) || []
+    };
+    delete transformedPost.post_genres;
+    
     return res.status(200).json({
       success: true,
-      data: post
+      data: transformedPost
     });
   } catch (error) {
     console.error("Database error:", error);
@@ -164,16 +185,40 @@ router.get("/", async (req, res) => {
   }
   
   try {
-    // Build supabase query
+    // Build supabase query with genres
     const from = (pageNum - 1) * limitNum;
     const to = from + limitNum - 1;
-    let query = supabase.from('posts').select('*', { count: 'exact' }).order('date', { ascending: false }).range(from, to);
+    let query = supabase
+      .from('posts')
+      .select(`
+        *,
+        post_genres(
+          genres(
+            id,
+            name
+          )
+        )
+      `, { count: 'exact' })
+      .order('date', { ascending: false })
+      .range(from, to);
 
-    if (category) query = query.eq('category_id', category);
     if (keyword) query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%,content.ilike.%${keyword}%`);
 
     const { data, count, error } = await query;
     if (error) throw error;
+
+    // Transform posts data to include genres
+    let transformedPosts = (data || []).map(post => ({
+      ...post,
+      genres: post.post_genres?.map(pg => pg.genres) || []
+    })).map(({ post_genres, ...post }) => post);
+
+    // Handle category filtering by genre name after transformation
+    if (category && category !== 'Highlight') {
+      transformedPosts = transformedPosts.filter(post => 
+        post.genres.some(genre => genre && genre.name === category)
+      );
+    }
 
     const totalPosts = count || 0;
     const totalPages = Math.ceil(totalPosts / limitNum) || 1;
@@ -183,7 +228,7 @@ router.get("/", async (req, res) => {
       totalPages,
       currentPage: pageNum,
       limit: limitNum,
-      posts: data || [],
+      posts: transformedPosts,
       nextPage: pageNum < totalPages ? pageNum + 1 : null
     });
   } catch (error) {

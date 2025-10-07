@@ -30,7 +30,7 @@ export function NavBar() {
     return (
       <nav className="flex flex-row justify-between items-center px-6 py-4 bg-neutral-50 border-b border-neutral-200">
         {/* <!-- Logo --> */}
-        <img src="./public/Plotline_text.svg" alt="Plotline logo" className="w-25 h-25 mx-10 -my-25"/>
+        <img src="Plotline_text.svg" alt="Plotline logo" className="w-25 h-25 mx-10 -my-25"/>
 
         {/* <!-- Buttons --> */}
         <div className="flex items-center space-x-[8px] max-sm:hidden">
