@@ -1,6 +1,7 @@
 import express from "express";
 import postsRouter from "./posts.mjs";
 import profilesRouter from "./profiles.mjs";
+import authRouter from "./auth.mjs";
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.get("/", (req, res) => {
 // Mount routers
 router.use("/posts", postsRouter);
 router.use("/profiles", profilesRouter);
+router.use("/auth", authRouter);
 
 export default router;
