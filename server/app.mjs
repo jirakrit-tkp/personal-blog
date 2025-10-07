@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "https://jt-personal-blog.vercel.app", // ใส่โดเมนจริงจาก Vercel
-      "https://personal-blog-b8cl4rym6-jirakrit-tkps-projects.vercel.app", // Vercel domain ใหม่
+      /^https:\/\/personal-blog-.*\.vercel\.app$/, // รองรับ Vercel preview domains ทั้งหมด
       "http://localhost:5173",            // ใช้ตอน dev
     ],
   })
