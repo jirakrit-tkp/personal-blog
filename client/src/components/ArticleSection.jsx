@@ -34,9 +34,9 @@ function ArticleSection() {
                         <div className="flex justify-between items-center">
                             {/* Left side - Filters/Categories */}
                             <div className="flex items-center space-x-6">
-                                {filters.map((filter) => (
+                                {filters.map((filter, idx) => (
                                     <button
-                                        key={filter}
+                                        key={`${filter}-${idx}`}
                                         onClick={() => updateFilter(filter)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                             selectedFilter === filter
@@ -83,8 +83,8 @@ function ArticleSection() {
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {filters.map((filter) => (
-                                        <SelectItem key={filter} value={filter}>
+                                    {filters.map((filter, idx) => (
+                                        <SelectItem key={`${filter}-${idx}`} value={filter}>
                                             {filter}
                                         </SelectItem>
                                     ))}
@@ -103,8 +103,8 @@ function ArticleSection() {
                     ) : (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {blogPosts.map((article) => (
-                                    <BlogCard key={article.id} {...article} />
+                                {blogPosts.map((article, idx) => (
+                                    <BlogCard key={`${article?.id ?? article?.title ?? 'post'}-${idx}`} {...article} />
                                 ))}
                             </div>
                             

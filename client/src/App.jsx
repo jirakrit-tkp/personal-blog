@@ -1,19 +1,71 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import './App.css'
 import { LandingPage, ViewPost, NotFound, Login, Signup, SupabaseTest } from './pages'
+import AuthenticationRoute from './components/AuthenticationRoute'
+import ProtectedRoute from './components/ProtectedRoute'
+import { useAuth } from './context/authentication.jsx'
 
 function App() {
+  const { state, isAuthenticated } = useAuth();
+  const { getUserLoading, user } = state;
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/post/:id" element={<ViewPost />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/supabase-test" element={<SupabaseTest />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/post/:id" element={<ViewPost />} />
+      <Route path="/login" element={
+        <AuthenticationRoute 
+          isLoading={getUserLoading} 
+          isAuthenticated={isAuthenticated}
+        >
+          <Login />
+        </AuthenticationRoute>
+      } />
+      <Route path="/signup" element={
+        <AuthenticationRoute 
+          isLoading={getUserLoading} 
+          isAuthenticated={isAuthenticated}
+        >
+          <Signup />
+        </AuthenticationRoute>
+      } />
+      <Route path="/supabase-test" element={<SupabaseTest />} />
+      
+      {/* Example protected routes */}
+      <Route path="/profile" element={
+        <ProtectedRoute 
+          isLoading={getUserLoading}
+          isAuthenticated={isAuthenticated}
+          userRole={user?.role}
+          requiredRole={null}
+        >
+          <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+            <div className="bg-white p-8 rounded-lg shadow-md">
+              <h1 className="text-2xl font-bold mb-4">User Profile</h1>
+              <p className="text-gray-600">This is a protected page for authenticated users.</p>
+            </div>
+          </div>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin" element={
+        <ProtectedRoute 
+          isLoading={getUserLoading}
+          isAuthenticated={isAuthenticated}
+          userRole={user?.role}
+          requiredRole="admin"
+        >
+          <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+            <div className="bg-white p-8 rounded-lg shadow-md">
+              <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+              <p className="text-gray-600">This is an admin-only page.</p>
+            </div>
+          </div>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   )
 }
 

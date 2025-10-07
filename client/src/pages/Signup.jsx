@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { NavBar, Footer } from '../components/WebSection';
+import { useAuth } from '../context/authentication.jsx';
 
 function Signup() {
   const navigate = useNavigate();
+  const { register, state } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -34,7 +36,7 @@ function Signup() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -65,9 +67,12 @@ function Signup() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log('Signup data:', formData);
-      // Show success modal
-      setShowSuccessModal(true);
+      const result = await register(formData);
+      if (result?.error) {
+        setErrors({ general: result.error });
+      } else {
+        setShowSuccessModal(true);
+      }
     }
   };
 
@@ -88,6 +93,13 @@ function Signup() {
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Sign up</h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* General Error */}
+              {errors.general && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  {errors.general}
+                </div>
+              )}
+
               {/* Name Field */}
               <div>
                 <label htmlFor="name" className={`block text-sm font-medium mb-2 ${errors.name ? 'text-red-600' : 'text-gray-700'}`}>
@@ -183,9 +195,10 @@ function Signup() {
               {/* Sign Up Button */}
               <button
                 type="submit"
-                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                disabled={state.loading}
+                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign up
+                {state.loading ? 'Creating account...' : 'Sign up'}
               </button>
             </form>
 
