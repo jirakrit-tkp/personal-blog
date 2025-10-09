@@ -28,8 +28,15 @@ export const useArticles = () => {
 
     // Extract unique categories from articles
     const extractCategories = (articlesData) => {
-        const uniqueCategories = [...new Set(articlesData.map(article => article.category))];
-        return ['Highlight', ...uniqueCategories.filter(cat => cat !== 'Highlight')];
+        const uniqueGenres = new Set();
+        articlesData.forEach(article => {
+            if (article.genres && Array.isArray(article.genres)) {
+                article.genres.forEach(genre => {
+                    uniqueGenres.add(genre.name);
+                });
+            }
+        });
+        return ['Highlight', ...Array.from(uniqueGenres)];
     };
 
     // Load articles

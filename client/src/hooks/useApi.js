@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 
 export const useApi = () => {
     const [loading, setLoading] = useState(false);
@@ -15,40 +14,25 @@ export const useApi = () => {
             }
             setError(null);
 
-            // คำนวณช่วงข้อมูลสำหรับ Supabase range
-            const pageNumber = Number(params.page) || 1;
-            const pageSize = Number(params.limit) || 6;
-            const from = (pageNumber - 1) * pageSize;
-            const to = from + pageSize - 1;
-
-            let query = supabase
-                .from('posts')
-                .select('*', { count: 'exact' })
-                .order('date', { ascending: false })
-                .range(from, to);
-
-            // กรองตาม category ถ้ามีและไม่ใช่ Highlight
+            // เรียก backend API แทนการใช้ Supabase โดยตรง
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+            const queryParams = new URLSearchParams();
+            
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
             if (params.category && params.category !== 'Highlight') {
-                // ถ้า category เป็นตัวเลข ให้ใช้เป็น category_id
-                if (!Number.isNaN(Number(params.category))) {
-                    query = query.eq('category_id', Number(params.category));
-                }
+                queryParams.append('category', params.category);
             }
+            if (params.keyword) queryParams.append('keyword', params.keyword);
 
-            // ค้นหาด้วย keyword
-            if (params.keyword && params.keyword.trim()) {
-                const kw = `%${params.keyword.trim()}%`;
-                query = query.or(
-                    `title.ilike.${kw},description.ilike.${kw},content.ilike.${kw}`
-                );
-            }
-
-            const { data, error, count } = await query;
-            if (error) throw error;
-
+            const response = await fetch(`${apiBase}/posts?${queryParams}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            
             return {
-                data: data || [],
-                hasMore: Boolean(count && to + 1 < count)
+                data: data.posts || [],
+                hasMore: Boolean(data.nextPage)
             };
         } catch (err) {
             setError(err);
@@ -67,15 +51,14 @@ export const useApi = () => {
             setLoading(true);
             setError(null);
 
-            const { data, error } = await supabase
-                .from('posts')
-                .select('*')
-                .eq('id', postId)
-                .single();
-
-            if (error) throw error;
-
-            return { data };
+            // เรียก backend API แทนการใช้ Supabase โดยตรง
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+            const response = await fetch(`${apiBase}/posts/${postId}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const result = await response.json();
+            
+            return { data: result.data };
         } catch (err) {
             setError(err);
             throw err;

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { NavBar, Footer } from '../components/WebSection.jsx'
+import { NavBar, Footer } from '../components/websection'
 import { useSinglePost } from '../hooks/useSinglePost'
 import Post from '../components/Post'
 
