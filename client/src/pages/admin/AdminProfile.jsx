@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/authentication.jsx';
+import axios from 'axios';
 
 const AdminProfile = () => {
-  const { state } = useAuth();
+  const { state, fetchUser } = useAuth();
   const { user } = state;
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     username: user?.username || '',
-    bio: 'I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness. When I\'m not writing, I spend time volunteering at my local animal shelter, helping cats find loving homes.'
+    bio: user?.bio || ''
   });
 
   const handleInputChange = (e) => {
@@ -21,10 +25,52 @@ const AdminProfile = () => {
     }));
   };
 
-  const handleSave = () => {
-    // TODO: Save to backend API
-    console.log('Saving profile:', formData);
-    setIsEditing(false);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('username', formData.username);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('bio', formData.bio || '');
+      
+      if (selectedFile) {
+        formDataToSend.append('profilePicture', selectedFile);
+      }
+
+      const response = await axios.put(`${apiBase}/profiles/${user.id}`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        alert('Profile updated successfully!');
+        await fetchUser(); // Refresh user data
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('Failed to update profile: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -34,6 +80,8 @@ const AdminProfile = () => {
       username: user?.username || '',
       bio: 'I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness. When I\'m not writing, I spend time volunteering at my local animal shelter, helping cats find loving homes.'
     });
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setIsEditing(false);
   };
 
@@ -62,10 +110,11 @@ const AdminProfile = () => {
                   Cancel
                 </button>
                 <button 
-                  className="px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-colors"
+                  className="px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleSave}
+                  disabled={isSaving}
                 >
-                  Save
+                  {isSaving ? 'Saving...' : 'Save'}
                 </button>
               </>
             )}
@@ -78,16 +127,31 @@ const AdminProfile = () => {
         <div className="flex items-center gap-6 mb-8">
           <div className="w-22 h-22 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
             <img 
-              src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg" 
+              src={previewUrl || user?.profilePic || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"} 
               alt="Profile"
               className="w-full h-full object-cover"
             />
           </div>
           <div className="flex-1">
             {isEditing ? (
-              <button className="px-6 py-2 bg-white border border-stone-800 text-stone-800 rounded-full hover:bg-stone-50 transition-colors cursor-pointer font-medium">
-                Upload profile picture
-              </button>
+              <>
+                <input 
+                  type="file" 
+                  id="profile-picture-input"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label 
+                  htmlFor="profile-picture-input"
+                  className="inline-block px-6 py-2 bg-white border border-stone-800 text-stone-800 rounded-full hover:bg-stone-50 transition-colors cursor-pointer font-medium"
+                >
+                  {selectedFile ? 'Change Picture' : 'Upload profile picture'}
+                </label>
+                {selectedFile && (
+                  <span className="ml-3 text-sm text-gray-600">{selectedFile.name}</span>
+                )}
+              </>
             ) : (
               <button className="px-6 py-2 bg-white/50 border border-stone-300 text-stone-400 rounded-full font-medium" disabled>
                 Upload profile picture
@@ -176,26 +240,26 @@ const AdminProfile = () => {
           {/* Bio Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bio (max 120 letters)
+              Bio (max 500 letters)
             </label>
-            {isEditing ? (
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                rows={4}
-                maxLength={120}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors resize-none"
-                placeholder="Enter your bio"
-              />
-            ) : (
-              <textarea
-                value={formData.bio}
-                readOnly
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400 resize-none"
-              />
-            )}
+                {isEditing ? (
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    rows={4}
+                    maxLength={500}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors resize-none"
+                    placeholder="Enter your bio"
+                  />
+                ) : (
+                  <textarea
+                    value={user?.bio || ''}
+                    readOnly
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400 resize-none"
+                  />
+                )}
           </div>
         </div>
       </div>

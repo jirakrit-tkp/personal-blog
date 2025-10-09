@@ -1,11 +1,11 @@
-import { NavBar, HeroSection, Footer } from '../components/websection'
+import { NavBar, AuthorSection, Footer } from '../components/websection'
 import ArticleSection from '../components/ArticleSection'
 
 function LandingPage() {
   return (
     <>
       <NavBar />
-      <HeroSection />
+      <AuthorSection />
       <ArticleSection />
       <Footer />
     </>

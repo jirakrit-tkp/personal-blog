@@ -87,7 +87,7 @@ router.get("/get-user", async (req, res) => {
     const supabaseUserId = data.user.id;
     const { data: rows, error: dbErr } = await supabase
       .from("users")
-      .select("username,name,role,profile_pic")
+      .select("username,name,role,profile_pic,bio")
       .eq("id", supabaseUserId)
       .limit(1);
     if (dbErr) throw dbErr;
@@ -99,7 +99,8 @@ router.get("/get-user", async (req, res) => {
       username: profile && profile.username,
       name: profile && profile.name,
       role: profile && profile.role,
-      profilePic: profile && profile.profile_pic
+      profilePic: profile && profile.profile_pic,
+      bio: profile && profile.bio
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });

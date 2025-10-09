@@ -1,4 +1,8 @@
+import { useAuth } from '../../context/authentication.jsx';
+
 const AuthorSection = () => {
+  const { state } = useAuth();
+  const { user } = state;
   AuthorSection.displayName = "AuthorSection";
 
   return (
@@ -19,8 +23,8 @@ const AuthorSection = () => {
         <div className="flex justify-center flex-1">
           <div className="relative">
             <img 
-              src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg" 
-              alt="A man with a beard wearing a beanie and plaid shirt with a black and white cat on his shoulder in an autumn forest setting"
+              src={user?.profilePic || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"}
+              alt={user?.name ? `${user.name} profile picture` : "Default profile picture"}
               className="rounded-2xl shadow-lg w-full max-w-[300px] lg:w-[386px] h-auto lg:h-[529px] object-cover"
             />
           </div>
@@ -29,14 +33,9 @@ const AuthorSection = () => {
         {/* Right Section - Author Bio */}
         <div className="flex flex-col items-start space-y-4 flex-1 text-start">
           <p className="text-sm text-neutral-500 font-medium">-Author</p>
-          <h2 className="text-2xl font-bold text-neutral-900">Thompson P.</h2>
+          <h2 className="text-2xl font-bold text-neutral-900">{user?.name || 'Admin'}</h2>
           <div className="space-y-3 text-neutral-700 leading-relaxed">
-            <p>
-              I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness.
-            </p>
-            <p>
-              When I'm not writing, I spends time volunteering at my local animal shelter, helping cats find loving homes.
-            </p>
+            <p>{user?.bio || ' '}</p>
           </div>
         </div>
       </div>
