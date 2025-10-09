@@ -5,6 +5,7 @@ import {
   AdminLayout, 
   AdminDashboard, 
   ArticleManagement, 
+  CreateArticle,
   CategoryManagement, 
   AdminProfile, 
   AdminNotifications, 
@@ -70,6 +71,7 @@ function App() {
       }>
         <Route index element={<AdminDashboard />} />
         <Route path="articles" element={<ArticleManagement />} />
+        <Route path="articles/create" element={<CreateArticle />} />
         <Route path="categories" element={<CategoryManagement />} />
         <Route path="profile" element={<AdminProfile />} />
         <Route path="notifications" element={<AdminNotifications />} />

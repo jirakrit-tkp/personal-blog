@@ -1,5 +1,5 @@
 export const validateCreatePostData = (req, res, next) => {
-    const { title, image, category_id, description, content, status_id } = req.body;
+    const { title, image, genre_ids, description, content, status_id, author_id } = req.body;
 
     // Validate required fields
     const missingFields = [];
@@ -8,18 +8,20 @@ export const validateCreatePostData = (req, res, next) => {
     // Check for missing fields
     if (!title || title.trim() === '') missingFields.push('title');
     if (!image || image.trim() === '') missingFields.push('image');
-    if (!category_id) missingFields.push('category_id');
+    if (!genre_ids || !Array.isArray(genre_ids) || genre_ids.length === 0) missingFields.push('genre_ids');
     if (!description || description.trim() === '') missingFields.push('description');
     if (!content || content.trim() === '') missingFields.push('content');
     if (!status_id) missingFields.push('status_id');
+    if (!author_id) missingFields.push('author_id');
     
     // Check data types
     if (title && typeof title !== 'string') typeErrors.push('Title must be a string');
     if (image && typeof image !== 'string') typeErrors.push('Image must be a string');
-    if (category_id && typeof category_id !== 'number') typeErrors.push('Category ID must be a number');
+    if (genre_ids && !Array.isArray(genre_ids)) typeErrors.push('Genre IDs must be an array');
     if (description && typeof description !== 'string') typeErrors.push('Description must be a string');
     if (content && typeof content !== 'string') typeErrors.push('Content must be a string');
     if (status_id && typeof status_id !== 'number') typeErrors.push('Status ID must be a number');
+    if (author_id && typeof author_id !== 'string') typeErrors.push('Author ID must be a string');
     
     // Return 400 error if any required fields are missing
     if (missingFields.length > 0) {

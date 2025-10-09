@@ -1,6 +1,7 @@
 import express from "express";
 import supabase from "../utils/db.mjs";
 import multer from "multer";
+import path from "path";
 import { createClient } from "@supabase/supabase-js";
 
 // Supabase client for storage - use SERVICE ROLE key to bypass RLS on server
@@ -133,6 +134,61 @@ router.put("/:id", profilePictureUpload, async (req, res) => {
       success: false,
       error: "Failed to update profile",
       message: error.message
+    });
+  }
+});
+
+// POST upload image only
+router.post("/upload-image", profilePictureUpload, async (req, res) => {
+  const file = req.file;
+  
+  if (!file) {
+    return res.status(400).json({
+      success: false,
+      error: "No image file provided"
+    });
+  }
+
+  try {
+    const bucketName = process.env.SUPABASE_STORAGE_BUCKET || "my-personal-blog";
+    
+    // Generate unique filename
+    const fileExt = path.extname(file.originalname);
+    const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
+    const filePath = `articles/${fileName}`;
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error("Supabase upload error:", uploadError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to upload image to storage"
+      });
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return res.status(200).json({
+      success: true,
+      imageUrl: urlData.publicUrl,
+      message: "Image uploaded successfully"
+    });
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error during upload"
     });
   }
 });

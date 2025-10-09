@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { NavBar, Footer } from '../components/websection';
 import { useAuth } from '../context/authentication.jsx';
 
 function Login() {
   const { login, state } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -51,7 +52,7 @@ function Login() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      const result = await login(formData);
+      const result = await login(formData, navigate);
       if (result?.error) {
         setErrors({ general: result.error });
       }

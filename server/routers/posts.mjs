@@ -6,31 +6,48 @@ const router = express.Router();
 
 // POST create new post
 router.post("/", [validateCreatePostData], async (req, res) => {
-  const { title, image, category_id, description, content, status_id } = req.body;
-  
-  const newPost = {
-    title: title.trim(),
-    image: image.trim(), 
-    category_id: parseInt(category_id),
-    description: description.trim(), 
-    content: content.trim(), 
-    status_id: parseInt(status_id), 
-    date: new Date(), 
-    likes: 0
-  };
+  const { title, image, genre_ids, description, content, status_id, author_id } = req.body;
   
   try {
-    const { error } = await supabase.from('posts').insert({
-      title: newPost.title,
-      image: newPost.image,
-      category_id: newPost.category_id,
-      description: newPost.description,
-      content: newPost.content,
-      status_id: newPost.status_id,
-      date: newPost.date,
-      likes_count: newPost.likes
+    // Insert post first
+    const { data: postData, error: postError } = await supabase
+      .from('posts')
+      .insert({
+        title: title.trim(),
+        image: image.trim(),
+        description: description.trim(),
+        content: content.trim(),
+        status_id: parseInt(status_id),
+        author_id: author_id,
+        date: new Date(),
+        likes_count: 0
+      })
+      .select('id')
+      .single();
+
+    if (postError) throw postError;
+
+    // Insert post_genres relationships
+    if (genre_ids && genre_ids.length > 0) {
+      const postGenres = genre_ids.map(genre_id => ({
+        post_id: postData.id,
+        genre_id: parseInt(genre_id),
+        created_at: new Date()
+      }));
+
+      const { error: genreError } = await supabase
+        .from('post_genres')
+        .insert(postGenres);
+
+      if (genreError) throw genreError;
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Created post successfully",
+      data: { id: postData.id, title: title.trim() }
     });
-    if (error) throw error;
+
   } catch (error) {
     console.error("Database error:", error);
     return res.status(500).json({
@@ -39,11 +56,6 @@ router.post("/", [validateCreatePostData], async (req, res) => {
       message: error.message
     });
   }
-  return res.status(201).json({
-    success: true,
-    message: "Created post successfully",
-    data: newPost
-  });
 });
 
 // GET single post by ID
@@ -56,6 +68,10 @@ router.get("/:id", [validatePostId], async (req, res) => {
       .from('posts')
       .select(`
         *,
+        statuses(
+          id,
+          status
+        ),
         post_genres!inner(
           genres(
             id,
@@ -77,9 +93,11 @@ router.get("/:id", [validatePostId], async (req, res) => {
     // Transform genres data
     const transformedPost = {
       ...post,
+      status: post.statuses?.status || 'Draft',
       genres: post.post_genres?.map(pg => pg.genres) || []
     };
     delete transformedPost.post_genres;
+    delete transformedPost.statuses;
     
     return res.status(200).json({
       success: true,
@@ -192,6 +210,10 @@ router.get("/", async (req, res) => {
       .from('posts')
       .select(`
         *,
+        statuses(
+          id,
+          status
+        ),
         post_genres(
           genres(
             id,
@@ -210,8 +232,9 @@ router.get("/", async (req, res) => {
     // Transform posts data to include genres
     let transformedPosts = (data || []).map(post => ({
       ...post,
+      status: post.statuses?.status || 'Draft',
       genres: post.post_genres?.map(pg => pg.genres) || []
-    })).map(({ post_genres, ...post }) => post);
+    })).map(({ post_genres, statuses, ...post }) => post);
 
     // Handle category filtering by genre name after transformation
     if (category && category !== 'Highlight') {
