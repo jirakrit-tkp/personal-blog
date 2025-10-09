@@ -1,4 +1,4 @@
-import { NavBar, HeroSection, Footer } from '../components/WebSection.jsx'
+import { NavBar, HeroSection, Footer } from '../components/websection'
 import ArticleSection from '../components/ArticleSection'
 
 function LandingPage() {

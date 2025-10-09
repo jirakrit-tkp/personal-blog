@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { NavBar, Footer } from '../components/WebSection';
+import { NavBar, Footer } from '../components/websection';
 import { useAuth } from '../context/authentication.jsx';
 
 function Login() {

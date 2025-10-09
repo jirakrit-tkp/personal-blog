@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Navigate } from "react-router-dom";
-import { LoadingScreen } from "./WebSection";
+import { LoadingScreen } from "./websection";
 
 function AuthenticationRoute({ isLoading, isAuthenticated, children }) {
   if (isLoading === null || isLoading) {

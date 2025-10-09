@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { NavBar, Footer } from '../components/WebSection'
+import { NavBar, Footer } from '../components/websection'
 
 function NotFound() {
   return (
