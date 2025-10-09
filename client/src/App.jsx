@@ -1,6 +1,15 @@
 import { Routes, Route } from 'react-router-dom'
 import './App.css'
 import { LandingPage, ViewPost, NotFound, Login, Signup, SupabaseTest } from './pages'
+import { 
+  AdminLayout, 
+  AdminDashboard, 
+  ArticleManagement, 
+  CategoryManagement, 
+  AdminProfile, 
+  AdminNotifications, 
+  AdminResetPassword 
+} from './pages/admin'
 import AuthenticationRoute from './components/AuthenticationRoute'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth } from './context/authentication.jsx'
@@ -48,6 +57,7 @@ function App() {
         </ProtectedRoute>
       } />
       
+      {/* Admin Routes */}
       <Route path="/admin" element={
         <ProtectedRoute 
           isLoading={getUserLoading}
@@ -55,14 +65,16 @@ function App() {
           userRole={user?.role}
           requiredRole="admin"
         >
-          <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-            <div className="bg-white p-8 rounded-lg shadow-md">
-              <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
-              <p className="text-gray-600">This is an admin-only page.</p>
-            </div>
-          </div>
+          <AdminLayout />
         </ProtectedRoute>
-      } />
+      }>
+        <Route index element={<AdminDashboard />} />
+        <Route path="articles" element={<ArticleManagement />} />
+        <Route path="categories" element={<CategoryManagement />} />
+        <Route path="profile" element={<AdminProfile />} />
+        <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="reset-password" element={<AdminResetPassword />} />
+      </Route>
       
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavBar, Footer } from '../components/WebSection'
+import { NavBar, Footer } from '../components/websection'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 
 function SupabaseTest() {
