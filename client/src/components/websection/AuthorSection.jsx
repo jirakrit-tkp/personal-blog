@@ -1,8 +1,28 @@
-import { useAuth } from '../../context/authentication.jsx';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const AuthorSection = () => {
-  const { state } = useAuth();
-  const { user } = state;
+  const [publicAdmin, setPublicAdmin] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchPublicAdmin = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+        const adminId = import.meta.env.VITE_PUBLIC_ADMIN_ID; // UUID of admin user
+        if (!adminId) return;
+        const res = await axios.get(`${apiBase}/profiles/${adminId}`, { signal: controller.signal });
+        if (res?.data?.success) {
+          setPublicAdmin(res.data.data);
+        }
+      } catch (err) {
+        // silent fail; will fallback to defaults
+      }
+    };
+
+    fetchPublicAdmin();
+    return () => controller.abort();
+  }, []);
   AuthorSection.displayName = "AuthorSection";
 
   return (
@@ -23,8 +43,8 @@ const AuthorSection = () => {
         <div className="flex justify-center flex-1">
           <div className="relative">
             <img 
-              src={user?.profilePic || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"}
-              alt={user?.name ? `${user.name} profile picture` : "Default profile picture"}
+              src={(publicAdmin?.profile_pic) || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"}
+              alt={(publicAdmin?.name) ? `${publicAdmin?.name} profile picture` : "Default profile picture"}
               className="rounded-2xl shadow-lg w-full max-w-[300px] lg:w-[386px] h-auto lg:h-[529px] object-cover"
             />
           </div>
@@ -33,9 +53,9 @@ const AuthorSection = () => {
         {/* Right Section - Author Bio */}
         <div className="flex flex-col items-start space-y-4 flex-1 text-start">
           <p className="text-sm text-neutral-500 font-medium">-Author</p>
-          <h2 className="text-2xl font-bold text-neutral-900">{user?.name || 'Admin'}</h2>
+          <h2 className="text-2xl font-bold text-neutral-900">{publicAdmin?.name || 'Admin'}</h2>
           <div className="space-y-3 text-neutral-700 leading-relaxed">
-            <p>{user?.bio || ' '}</p>
+            <p>{publicAdmin?.bio || ' '}</p>
           </div>
         </div>
       </div>
