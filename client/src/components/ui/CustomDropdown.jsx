@@ -100,14 +100,14 @@ const CustomDropdown = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-900 mb-2">
+      <label className="block text-base font-medium text-stone-500 mb-2">
         {label}
       </label>
 
       {/* Dropdown Trigger */}
       <div 
         className={`w-full border rounded-md text-sm px-3 py-2 bg-white ${
-          multiple ? 'min-h-[50px]' : 'h-[50px]'
+          multiple ? 'min-h-[42px]' : 'h-[42px]'
         } flex items-center cursor-pointer relative ${
           hasError 
             ? "border-red-500 focus:ring-red-500 focus:border-red-500 pr-10"

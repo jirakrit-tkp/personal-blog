@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
 import axios from 'axios';
 import CustomDropdown from '../../components/ui/CustomDropdown';
+import FormInput from '../../components/ui/FormInput';
+import FormTextarea from '../../components/ui/FormTextarea';
+import { AdminNavbar } from '../../components/admin';
 
 const CreateArticle = () => {
   const navigate = useNavigate();
@@ -154,44 +157,43 @@ const CreateArticle = () => {
 
   return (
     <div className="bg-stone-100 min-h-screen">
-      {/* Page Header */}
-      <div className="bg-stone-100 px-8 py-6 border-b-2 border-stone-300">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Create article</h1>
-          <div className="flex gap-3">
+      <AdminNavbar 
+        title="Create article"
+        actions={
+          <>
             <button 
-              className="px-6 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
+              className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors"
               onClick={handleCancel}
             >
               Cancel
             </button>
             <button 
-              className="px-6 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => handleSubmit(false)}
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Saving...' : 'Save as draft'}
             </button>
             <button 
-              className="px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => handleSubmit(true)}
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Publishing...' : 'Save and publish'}
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="p-8 min-h-[calc(100vh-120px)]">
-        <div className="max-w-6xl mx-auto space-y-6">
+      <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
+        <div className="space-y-6">
           {/* Thumbnail Image Section */}
           <div>
-            <label className="block text-lg font-medium text-gray-700 mb-4">
+            <label className="block text-base font-medium text-stone-700 mb-4">
               Thumbnail Image
             </label>
-            <div className="flex items-center gap-6">
-              <div className="w-48 h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+            <div className="flex items-end gap-6">
+              <div className="w-1/2 h-[260px] bg-stone-200 rounded-lg border-2 border-dashed border-stone-400 flex items-center justify-center overflow-hidden">
                 {previewUrl ? (
                   <img 
                     src={previewUrl} 
@@ -199,7 +201,7 @@ const CreateArticle = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-12 h-12 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 )}
@@ -214,12 +216,12 @@ const CreateArticle = () => {
                 />
                 <label 
                   htmlFor="thumbnail-input"
-                  className="inline-block px-6 py-2 bg-white border border-stone-800 text-stone-800 rounded-lg hover:bg-stone-50 transition-colors cursor-pointer font-medium"
+                  className="inline-block text-base px-6 py-2 bg-white border border-stone-800 text-stone-800 rounded-full hover:bg-stone-50 transition-colors cursor-pointer font-medium"
                 >
                   Upload thumbnail image
                 </label>
                 {selectedFile && (
-                  <p className="mt-2 text-sm text-gray-600">{selectedFile.name}</p>
+                  <p className="mt-2 text-sm text-stone-600">{selectedFile.name}</p>
                 )}
               </div>
             </div>
@@ -236,73 +238,55 @@ const CreateArticle = () => {
               multiple={true}
               searchable={true}
               showAllOption={true}
-              className="w-full"
+              className="w-1/2"
             />
           </div>
 
           {/* Author Name */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-4">
-              Author name
-            </label>
-            <input
-              type="text"
-              name="author_name"
-              value={formData.author_name}
-              readOnly
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              placeholder="Author name"
-            />
-          </div>
+          <FormInput
+            label="Author name"
+            type="text"
+            name="author_name"
+            value={formData.author_name}
+            readOnly
+            placeholder="Author name"
+            className="w-1/2"
+          />
 
           {/* Title */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-4">
-              Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-              placeholder="Article title"
-            />
-          </div>
+          <FormInput
+            label="Title"
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleInputChange}
+            placeholder="Article title"
+            className="w-full"
+          />
 
           {/* Introduction */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-4">
-              Introduction (max 120 letters)
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              maxLength={120}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors resize-none"
-              placeholder="Introduction"
-            />
-            <div className="mt-2 text-sm text-gray-500 text-right">
-              {formData.description.length}/120 characters
-            </div>
-          </div>
+          <FormTextarea
+            label="Introduction (max 120 letters)"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            placeholder="Introduction"
+            rows={4}
+            maxLength={120}
+            showCharCount={true}
+            className="w-full"
+          />
 
           {/* Content */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-4">
-              Content
-            </label>
-            <textarea
-              name="content"
-              value={formData.content}
-              onChange={handleInputChange}
-              rows={12}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors resize-none"
-              placeholder="Content"
-            />
-          </div>
+          <FormTextarea
+            label="Content"
+            name="content"
+            value={formData.content}
+            onChange={handleInputChange}
+            placeholder="Content"
+            rows={12}
+            className="w-full"
+          />
         </div>
       </div>
     </div>

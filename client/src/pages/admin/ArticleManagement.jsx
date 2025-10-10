@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
+import { AdminNavbar } from '../../components/admin';
 
 const ArticleManagement = () => {
   const { fetchPosts, loading } = useApi();
@@ -65,18 +66,17 @@ const ArticleManagement = () => {
 
   return (
     <div className="bg-stone-100 min-h-screen">
-      {/* Page Header */}
-      <div className="bg-stone-100 px-8 py-6 border-b-2 border-stone-300">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Article Management</h1>
-          <Link 
+      <AdminNavbar 
+        title="Article Management"
+        actions={
+          <Link
             to="/admin/articles/create"
             className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors inline-block"
           >
             + Create Article
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
         {/* Search and Filters */}
@@ -88,14 +88,14 @@ const ArticleManagement = () => {
                 placeholder="Search articles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
+                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
               />
             </div>
             <div className="flex gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
+                className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
               >
                 <option value="">All Status</option>
                 <option value="Published">Published</option>
@@ -105,7 +105,7 @@ const ArticleManagement = () => {
               <select
                 value={genreFilter}
                 onChange={(e) => setGenreFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
+                className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
               >
                 <option value="">All Genres</option>
                 {genres.map(genre => (
@@ -235,13 +235,13 @@ const ArticleManagement = () => {
                 {selectedArticles.length} article(s) selected
               </span>
               <div className="flex gap-2">
-                <button className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded hover:bg-green-200">
+                <button className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full hover:bg-green-200">
                   Publish
                 </button>
-                <button className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded hover:bg-yellow-200">
+                <button className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full hover:bg-yellow-200">
                   Move to Draft
                 </button>
-                <button className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded hover:bg-red-200">
+                <button className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full hover:bg-red-200">
                   Delete
                 </button>
               </div>
