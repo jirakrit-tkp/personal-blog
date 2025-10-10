@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/authentication.jsx';
 import axios from 'axios';
+import { AdminNavbar } from '../../components/admin';
+import FormInput from '../../components/ui/FormInput';
+import FormTextarea from '../../components/ui/FormTextarea';
 
 const AdminProfile = () => {
   const { state, fetchUser } = useAuth();
@@ -89,38 +92,35 @@ const AdminProfile = () => {
 
   return (
     <div className="bg-stone-100 min-h-screen">
-      {/* Page Header */}
-      <div className="bg-stone-100 px-8 py-6 border-b-2 border-stone-300">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <div className="flex gap-3">
-            {!isEditing ? (
+      <AdminNavbar 
+        title="Profile"
+        actions={
+          !isEditing ? (
+            <button 
+              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <>
               <button 
-                className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
-                onClick={() => setIsEditing(true)}
+                className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors"
+                onClick={handleCancel}
               >
-                Edit Profile
+                Cancel
               </button>
-            ) : (
-              <>
-                <button 
-                  className="px-6 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+              <button 
+                className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+            </>
+          )
+        }
+      />
 
       <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
         {/* Profile Picture Section */}
@@ -166,101 +166,55 @@ const AdminProfile = () => {
         {/* Form Fields */}
         <div className="space-y-6">
           {/* Name Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Enter your name"
-              />
-            ) : (
-              <input
-                type="text"
-                value={user?.name || 'Not set'}
-                readOnly
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              />
-            )}
-          </div>
+          <FormInput
+            label="Name"
+            type="text"
+            name="name"
+            value={isEditing ? formData.name : (user?.name || 'Not set')}
+            onChange={handleInputChange}
+            placeholder="Enter your name"
+            readOnly={!isEditing}
+            className="w-1/2"
+          />
 
           {/* Username Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Enter your username"
-              />
-            ) : (
-              <input
-                type="text"
-                value={user?.username || 'Not set'}
-                readOnly
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              />
-            )}
-          </div>
+          <FormInput
+            label="Username"
+            type="text"
+            name="username"
+            value={isEditing ? formData.username : (user?.username || 'Not set')}
+            onChange={handleInputChange}
+            placeholder="Enter your username"
+            readOnly={!isEditing}
+            className="w-1/2"
+          />
 
           {/* Email Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            {isEditing ? (
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Enter your email"
-              />
-            ) : (
-              <input
-                type="email"
-                value={user?.email || 'Not set'}
-                readOnly
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              />
-            )}
-          </div>
+          <FormInput
+            label="Email"
+            type="email"
+            name="email"
+            value={isEditing ? formData.email : (user?.email || 'Not set')}
+            onChange={handleInputChange}
+            placeholder="Enter your email"
+            readOnly={!isEditing}
+            className="w-1/2"
+          />
 
           {/* Bio Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bio (max 500 letters)
-            </label>
-                {isEditing ? (
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    rows={4}
-                    maxLength={500}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors resize-none"
-                    placeholder="Enter your bio"
-                  />
-                ) : (
-                  <textarea
-                    value={user?.bio || ''}
-                    readOnly
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400 resize-none"
-                  />
-                )}
-          </div>
+          <FormTextarea
+            label="Bio (max 500 letters)"
+            name="bio"
+            value={isEditing ? formData.bio : (user?.bio || '')}
+            onChange={handleInputChange}
+            placeholder="Enter your bio"
+            readOnly={!isEditing}
+            rows={4}
+            maxLength={500}
+            showCharCount={true}
+            showMarkdownToolbar={true}
+            className="w-full"
+          />
         </div>
       </div>
     </div>

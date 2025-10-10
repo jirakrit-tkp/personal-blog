@@ -1,6 +1,8 @@
 export { default as AdminLayout } from './AdminLayout';
 export { default as AdminDashboard } from './AdminDashboard';
 export { default as ArticleManagement } from './ArticleManagement';
+export { default as CreateArticle } from './CreateArticle';
+export { default as EditArticle } from './EditArticle';
 export { default as CategoryManagement } from './CategoryManagement';
 export { default as AdminProfile } from './AdminProfile';
 export { default as AdminNotifications } from './AdminNotifications';

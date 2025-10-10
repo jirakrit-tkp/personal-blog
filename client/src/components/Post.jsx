@@ -38,7 +38,7 @@ function Post({ post, loading }) {
                   {post.category}
                 </span>
                 <span className="text-gray-600 text-sm">
-                  {new Date(post.date).toLocaleDateString('en-GB', {
+                  {new Date(post.created_at || post.date).toLocaleDateString('en-GB', {
                     day: '2-digit',
                     month: 'long',
                     year: 'numeric'

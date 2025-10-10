@@ -1,37 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useApi } from '../../hooks/useApi';
+import { AdminNavbar } from '../../components/admin';
+import { Pencil, Trash2 } from 'lucide-react';
+import CustomDropdown from '../../components/ui/CustomDropdown';
 
 const ArticleManagement = () => {
-  const [articles] = useState([
-    {
-      id: 1,
-      title: "The Art of Mindfulness: Finding Peace in a Busy World",
-      description: "Discover the transformative power of mindfulness...",
-      date: "2024-09-11",
-      status: "Published",
-      author: "Thompson P.",
-      genres: ["Action"]
-    },
-    {
-      id: 2,
-      title: "The Secret Language of Cats: Decoding Feline Communication",
-      description: "Unravel the mysteries of cat communication...",
-      date: "2024-08-21",
-      status: "Published",
-      author: "Thompson P.",
-      genres: ["Adventure"]
-    },
-    {
-      id: 3,
-      title: "Embracing Change: How to Thrive in Times of Transition",
-      description: "Learn powerful strategies to navigate life's changes...",
-      date: "2024-03-23",
-      status: "Draft",
-      author: "Thompson P.",
-      genres: ["Animation"]
-    }
-  ]);
-
+  const navigate = useNavigate();
+  const { fetchPosts, loading } = useApi();
+  const [articles, setArticles] = useState([]);
   const [selectedArticles, setSelectedArticles] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [genreFilter, setGenreFilter] = useState('');
+  const [genres, setGenres] = useState([]);
+
+  // Fetch genres from database
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+        const response = await fetch(`${apiBase}/genres`);
+        const data = await response.json();
+        if (data.success) {
+          setGenres(data.data.map(genre => genre.name));
+        }
+      } catch (error) {
+        console.error('Failed to load genres:', error);
+      }
+    };
+    
+    fetchGenres();
+  }, []);
+
+  // Fetch articles from database
+  useEffect(() => {
+    const loadArticles = async () => {
+      try {
+        const result = await fetchPosts({
+          page: 1,
+          limit: 50
+        });
+        setArticles(result.data || []);
+      } catch (error) {
+        console.error('Failed to load articles:', error);
+      }
+    };
+    
+    loadArticles();
+  }, []);
 
   const handleSelectArticle = (articleId) => {
     setSelectedArticles(prev => 
@@ -49,393 +66,194 @@ const ArticleManagement = () => {
     }
   };
 
+  // Filter articles based on search and filters
+  const filteredArticles = articles.filter(article => {
+    const matchesSearch = article.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         article.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Fix status mapping - use transformed status field
+    const articleStatus = article.status || 'Draft';
+    const matchesStatus = !statusFilter || statusFilter === 'All Status' || articleStatus === statusFilter;
+    
+    const matchesGenre = !genreFilter || genreFilter === 'All Genres' ||
+                        article.genres?.some(genre => genre.name === genreFilter);
+    
+    return matchesSearch && matchesStatus && matchesGenre;
+  });
+
+  // Get unique statuses from articles
+  const statuses = [...new Set(
+    articles.map(article => article.status).filter(Boolean)
+  )];
+
+  // Get unique genres from articles (only those actually used)
+  const articleGenres = [...new Set(
+    articles.flatMap(article => 
+      article.genres?.map(genre => genre.name) || []
+    )
+  )];
+
   ArticleManagement.displayName = "ArticleManagement";
 
   return (
-    <div className="article-management">
-      <div className="page-header">
-        <h1 className="page-title">Article Management</h1>
-        <div className="header-actions">
-          <button className="btn-secondary">Import</button>
-          <button className="btn-primary">Create Article</button>
-        </div>
-      </div>
+    <div className="bg-stone-100 min-h-screen">
+      <AdminNavbar 
+        title="Article Management"
+        actions={
+          <Link
+            to="/admin/articles/create"
+            className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors inline-block"
+          >
+            + Create Article
+          </Link>
+        }
+      />
 
-      <div className="management-toolbar">
-        <div className="toolbar-left">
-          <label className="checkbox-container">
-            <input 
-              type="checkbox" 
-              checked={selectedArticles.length === articles.length && articles.length > 0}
-              onChange={handleSelectAll}
-            />
-            <span className="checkmark"></span>
-            Select All
-          </label>
-          
-          {selectedArticles.length > 0 && (
-            <div className="bulk-actions">
-              <span className="selected-count">{selectedArticles.length} selected</span>
-              <button className="btn-bulk">Delete</button>
-              <button className="btn-bulk">Publish</button>
-              <button className="btn-bulk">Move to Draft</button>
+      <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
+         {/* Search and Filters */}
+         <div className="mb-6 [&>*]:mb-0">
+           <div className="flex gap-4 items-center">
+             <div className="flex-1">
+               <input
+                 type="text"
+                 placeholder="Search..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 className="w-1/2 h-10 px-4 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+               />
+             </div>
+             <div className="flex gap-3">
+                <div className="h-10 flex items-center">
+                  <CustomDropdown
+                    label=""
+                    options={['All Status', ...statuses]}
+                    value={statusFilter || 'All Status'}
+                    onChange={setStatusFilter}
+                    placeholder="Status"
+                    className="w-32 [&>label]:mb-0"
+                  />
+                </div>
+                <div className="h-10 flex items-center">
+                  <CustomDropdown
+                    label=""
+                    options={['All Genres', ...articleGenres]}
+                    value={genreFilter || 'All Genres'}
+                    onChange={setGenreFilter}
+                    placeholder="Genre"
+                    className="w-32 [&>label]:mb-0"
+                  />
+                </div>
+             </div>
+           </div>
+         </div>
+
+        {/* Articles Table */}
+        <div className="bg-white rounded-lg border border-stone-200 overflow-hidden min-h-[400px]">
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="text-gray-500">Loading articles...</div>
             </div>
+          ) : (
+            <>
+              {/* Table Header */}
+              <div className="bg-stone-50 border-b border-stone-200">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-medium text-gray-700">
+                  <div className="col-span-6">Article title</div>
+                  <div className="col-span-3">Genre</div>
+                  <div className="col-span-2">Status</div>
+                  <div className="col-span-1"></div>
+                </div>
+              </div>
+
+              {/* Table Body */}
+              <div className="divide-y divide-stone-200 min-h-[300px]">
+                {filteredArticles.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    No articles found
+                  </div>
+                ) : (
+                  filteredArticles.map(article => (
+                    <div key={article.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-stone-50">
+                      <div className="col-span-6">
+                        <div className="font-medium text-gray-900 truncate">
+                          {article.title || 'Untitled'}
+                        </div>
+                        <div className="text-sm text-gray-500 truncate">
+                          {article.description || 'No description'}
+                        </div>
+                      </div>
+                      
+                      <div className="col-span-3">
+                        <div className="flex flex-wrap gap-1">
+                          {article.genres?.map((genre, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded-full"
+                            >
+                              {genre.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="col-span-2">
+                        <div className="flex items-center gap-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            article.status === 'published' 
+                              ? 'bg-green-500' 
+                              : 'bg-stone-400'
+                          }`}></div>
+                          <span className={`text-sm ${
+                            article.status === 'published' 
+                              ? 'text-green-600' 
+                              : 'text-stone-600'
+                          }`}>
+                            {article.status || 'Draft'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="col-span-1 flex gap-6">
+                        <button 
+                          className="text-gray-400 hover:text-stone-600"
+                          onClick={() => navigate(`/admin/articles/edit/${article.id}`)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button className="text-gray-400 hover:text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
           )}
         </div>
 
-        <div className="toolbar-right">
-          <div className="search-box">
-            <input type="text" placeholder="Search articles..." />
-            <button className="search-btn">🔍</button>
-          </div>
-          <select className="filter-select">
-            <option value="">All Status</option>
-            <option value="Published">Published</option>
-            <option value="Draft">Draft</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="articles-table">
-        <div className="table-header">
-          <div className="col-checkbox"></div>
-          <div className="col-title">Title</div>
-          <div className="col-author">Author</div>
-          <div className="col-genres">Genres</div>
-          <div className="col-status">Status</div>
-          <div className="col-date">Date</div>
-          <div className="col-actions">Actions</div>
-        </div>
-
-        <div className="table-body">
-          {articles.map(article => (
-            <div key={article.id} className="table-row">
-              <div className="col-checkbox">
-                <label className="checkbox-container">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedArticles.includes(article.id)}
-                    onChange={() => handleSelectArticle(article.id)}
-                  />
-                  <span className="checkmark"></span>
-                </label>
-              </div>
-              
-              <div className="col-title">
-                <div className="article-title">{article.title}</div>
-                <div className="article-description">{article.description}</div>
-              </div>
-              
-              <div className="col-author">{article.author}</div>
-              
-              <div className="col-genres">
-                <div className="genres-list">
-                  {article.genres.map((genre, index) => (
-                    <span key={index} className="genre-tag">{genre}</span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="col-status">
-                <span className={`status-badge ${article.status.toLowerCase()}`}>
-                  {article.status}
-                </span>
-              </div>
-              
-              <div className="col-date">{article.date}</div>
-              
-              <div className="col-actions">
-                <button className="action-btn edit">Edit</button>
-                <button className="action-btn delete">Delete</button>
+        {/* Bulk Actions */}
+        {selectedArticles.length > 0 && (
+          <div className="mt-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                {selectedArticles.length} article(s) selected
+              </span>
+              <div className="flex gap-2">
+                <button className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full hover:bg-green-200">
+                  Publish
+                </button>
+                <button className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full hover:bg-yellow-200">
+                  Move to Draft
+                </button>
+                <button className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full hover:bg-red-200">
+                  Delete
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
-
-      <style jsx>{`
-        .article-management {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-        }
-
-        .page-title {
-          font-size: 28px;
-          font-weight: 700;
-          color: #1a1a1a;
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 12px;
-        }
-
-        .btn-primary, .btn-secondary {
-          padding: 10px 16px;
-          border-radius: 8px;
-          border: none;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .btn-primary {
-          background: #3b82f6;
-          color: white;
-        }
-
-        .btn-primary:hover {
-          background: #2563eb;
-        }
-
-        .btn-secondary {
-          background: white;
-          color: #374151;
-          border: 1px solid #d1d5db;
-        }
-
-        .btn-secondary:hover {
-          background: #f3f4f6;
-        }
-
-        .management-toolbar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-          padding: 16px;
-          background: white;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .toolbar-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .checkbox-container {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          color: #374151;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .bulk-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .selected-count {
-          font-size: 14px;
-          color: #6b7280;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .btn-bulk {
-          padding: 6px 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          background: white;
-          color: #374151;
-          font-size: 12px;
-          cursor: pointer;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .btn-bulk:hover {
-          background: #f3f4f6;
-        }
-
-        .toolbar-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .search-box {
-          display: flex;
-          align-items: center;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          overflow: hidden;
-        }
-
-        .search-box input {
-          padding: 8px 12px;
-          border: none;
-          outline: none;
-          font-size: 14px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .search-btn {
-          padding: 8px 12px;
-          border: none;
-          background: #f3f4f6;
-          cursor: pointer;
-        }
-
-        .filter-select {
-          padding: 8px 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 14px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .articles-table {
-          background: white;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-          overflow: hidden;
-        }
-
-        .table-header {
-          display: grid;
-          grid-template-columns: 50px 2fr 120px 150px 100px 120px 120px;
-          background: #f9fafb;
-          padding: 16px;
-          border-bottom: 1px solid #e5e7eb;
-          font-weight: 600;
-          font-size: 14px;
-          color: #374151;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .table-row {
-          display: grid;
-          grid-template-columns: 50px 2fr 120px 150px 100px 120px 120px;
-          padding: 16px;
-          border-bottom: 1px solid #e5e7eb;
-          align-items: center;
-        }
-
-        .table-row:hover {
-          background: #f9fafb;
-        }
-
-        .article-title {
-          font-weight: 500;
-          color: #1a1a1a;
-          margin-bottom: 4px;
-          font-size: 14px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .article-description {
-          color: #6b7280;
-          font-size: 12px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .genres-list {
-          display: flex;
-          gap: 4px;
-          flex-wrap: wrap;
-        }
-
-        .genre-tag {
-          background: #e0e7ff;
-          color: #3730a3;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 500;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .status-badge {
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 500;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .status-badge.published {
-          background: #dcfce7;
-          color: #166534;
-        }
-
-        .status-badge.draft {
-          background: #fef3c7;
-          color: #92400e;
-        }
-
-        .action-btn {
-          padding: 4px 8px;
-          border: none;
-          border-radius: 4px;
-          font-size: 12px;
-          cursor: pointer;
-          margin-right: 4px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .action-btn.edit {
-          background: #3b82f6;
-          color: white;
-        }
-
-        .action-btn.edit:hover {
-          background: #2563eb;
-        }
-
-        .action-btn.delete {
-          background: #ef4444;
-          color: white;
-        }
-
-        .action-btn.delete:hover {
-          background: #dc2626;
-        }
-
-        @media (max-width: 768px) {
-          .table-header,
-          .table-row {
-            grid-template-columns: 1fr;
-            gap: 8px;
-          }
-
-          .col-checkbox,
-          .col-title,
-          .col-author,
-          .col-genres,
-          .col-status,
-          .col-date,
-          .col-actions {
-            display: block;
-          }
-
-          .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
-          }
-
-          .management-toolbar {
-            flex-direction: column;
-            gap: 16px;
-            align-items: flex-start;
-          }
-        }
-      `}</style>
     </div>
   );
 };

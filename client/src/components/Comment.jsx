@@ -26,7 +26,7 @@ function CommentItem({ comment, replies = [], onReply }) {
         />
         <div className="flex-1">
           <h4 className="font-semibold text-gray-900 text-sm">{comment.author}</h4>
-          <p className="text-xs text-gray-500">{comment.date}</p>
+          <p className="text-xs text-gray-500">{comment.created_at || comment.date}</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ function CommentItem({ comment, replies = [], onReply }) {
                     alt={reply.author}
                   />
                   <h5 className="font-medium text-gray-900 text-xs">{reply.author}</h5>
-                  <p className="text-xs text-gray-500">{reply.date}</p>
+                  <p className="text-xs text-gray-500">{reply.created_at || reply.date}</p>
                 </div>
                 <p className="text-gray-700 text-xs leading-relaxed">{reply.content}</p>
               </div>

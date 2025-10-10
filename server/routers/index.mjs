@@ -2,6 +2,7 @@ import express from "express";
 import postsRouter from "./posts.mjs";
 import profilesRouter from "./profiles.mjs";
 import authRouter from "./auth.mjs";
+import genresRouter from "./genres.mjs";
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.get("/", (req, res) => {
 router.use("/posts", postsRouter);
 router.use("/profiles", profilesRouter);
 router.use("/auth", authRouter);
+router.use("/genres", genresRouter);
 
 export default router;
