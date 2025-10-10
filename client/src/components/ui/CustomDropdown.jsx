@@ -106,14 +106,14 @@ const CustomDropdown = ({
 
       {/* Dropdown Trigger */}
       <div 
-        className={`w-full border rounded-md text-sm px-3 py-2 bg-white ${
+        className={`w-full rounded-md text-sm px-3 py-2 bg-white ${
           multiple ? 'min-h-[42px]' : 'h-[42px]'
         } flex items-center cursor-pointer relative ${
           hasError 
-            ? "border-red-500 focus:ring-red-500 focus:border-red-500 pr-10"
+            ? "border-2 border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500"
             : disabled 
-              ? "border-gray-300 text-gray-600 opacity-50 cursor-not-allowed" 
-              : "border-gray-300 hover:border-orange-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              ? "border border-stone-300 text-stone-600 opacity-50 cursor-not-allowed" 
+              : "border border-stone-300 hover:border-stone-400 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
         }`}
         onClick={() => {
           if (!disabled) {

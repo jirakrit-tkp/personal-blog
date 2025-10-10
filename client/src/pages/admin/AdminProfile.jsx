@@ -4,6 +4,8 @@ import axios from 'axios';
 import { AdminNavbar } from '../../components/admin';
 import FormInput from '../../components/ui/FormInput';
 import FormTextarea from '../../components/ui/FormTextarea';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import Snackbar from '../../components/ui/Snackbar';
 
 const AdminProfile = () => {
   const { state, fetchUser } = useAuth();
@@ -13,6 +15,8 @@ const AdminProfile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
+  const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -26,6 +30,14 @@ const AdminProfile = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -41,6 +53,31 @@ const AdminProfile = () => {
   };
 
   const handleSave = async () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    }
+    
+    if (!formData.username.trim()) {
+      errors.username = 'Username is required';
+    }
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setSnackbar({
+        isOpen: true,
+        message: 'Please fill in all required fields',
+        type: 'error'
+      });
+      return;
+    }
+    
     setIsSaving(true);
     const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
 
@@ -62,7 +99,11 @@ const AdminProfile = () => {
       });
 
       if (response.data.success) {
-        alert('Profile updated successfully!');
+        setSnackbar({
+          isOpen: true,
+          message: 'Profile updated successfully!',
+          type: 'success'
+        });
         await fetchUser(); // Refresh user data
         setSelectedFile(null);
         setPreviewUrl(null);
@@ -70,7 +111,11 @@ const AdminProfile = () => {
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to update profile: ' + (error.response?.data?.error || error.message));
+      setSnackbar({
+        isOpen: true,
+        message: 'Failed to update profile: ' + (error.response?.data?.error || error.message),
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -81,11 +126,15 @@ const AdminProfile = () => {
       name: user?.name || '',
       email: user?.email || '',
       username: user?.username || '',
-      bio: 'I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness. When I\'m not writing, I spend time volunteering at my local animal shelter, helping cats find loving homes.'
+      bio: user?.bio || ''
     });
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsEditing(false);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, isOpen: false }));
   };
 
   AdminProfile.displayName = "AdminProfile";
@@ -175,6 +224,7 @@ const AdminProfile = () => {
             placeholder="Enter your name"
             readOnly={!isEditing}
             className="w-1/2"
+            hasError={!!validationErrors.name}
           />
 
           {/* Username Field */}
@@ -187,6 +237,7 @@ const AdminProfile = () => {
             placeholder="Enter your username"
             readOnly={!isEditing}
             className="w-1/2"
+            hasError={!!validationErrors.username}
           />
 
           {/* Email Field */}
@@ -199,6 +250,7 @@ const AdminProfile = () => {
             placeholder="Enter your email"
             readOnly={!isEditing}
             className="w-1/2"
+            hasError={!!validationErrors.email}
           />
 
           {/* Bio Field */}
@@ -217,6 +269,15 @@ const AdminProfile = () => {
           />
         </div>
       </div>
+
+
+      {/* Snackbar */}
+      <Snackbar
+        isOpen={snackbar.isOpen}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
+        type={snackbar.type}
+      />
     </div>
   );
 };
