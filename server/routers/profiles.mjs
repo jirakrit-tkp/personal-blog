@@ -158,7 +158,7 @@ router.post("/upload-image", profilePictureUpload, async (req, res) => {
     const filePath = `articles/${fileName}`;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabaseStorage.storage
       .from(bucketName)
       .upload(filePath, file.buffer, {
         contentType: file.mimetype,
@@ -174,7 +174,7 @@ router.post("/upload-image", profilePictureUpload, async (req, res) => {
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseStorage.storage
       .from(bucketName)
       .getPublicUrl(filePath);
 
