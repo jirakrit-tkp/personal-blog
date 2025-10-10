@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Star } from 'lucide-react';
+import Rating from 'react-rating';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
 import axios from 'axios';
@@ -23,7 +25,8 @@ const CreateArticle = () => {
     content: '',
     genre_ids: [],
     author_name: user?.name || '',
-    image: ''
+    image: '',
+    imhb_score: 0 // 0-10 (from 5 stars)
   });
 
   // Fetch available genres
@@ -131,13 +134,21 @@ const CreateArticle = () => {
         content: formData.content.trim(),
         genre_ids: formData.genre_ids, // Send all selected genres
         author_id: user?.id, // Use user ID from auth
-        status_id: publish ? 1 : 2, // 1 = Published, 2 = Draft
+        status_id: publish ? 2 : 1, // 1 = Draft, 2 = Published
         image: imageUrl
       };
 
       const response = await axios.post(`${apiBase}/posts`, submitData);
 
       if (response.data.success) {
+        const postId = response.data.data.id;
+        
+        // สร้าง rating record สำหรับ admin
+        await axios.post(`${apiBase}/posts/${postId}/ratings`, {
+          rating: formData.imhb_score,
+          user_id: user?.id
+        });
+
         alert(publish ? 'Article published successfully!' : 'Article saved as draft!');
         navigate('/admin/articles');
       }
@@ -152,6 +163,16 @@ const CreateArticle = () => {
   const handleCancel = () => {
     navigate('/admin/articles');
   };
+
+  // IMHb Star Rating Handler
+  const handleStarChange = (rating) => {
+    setFormData(prev => ({
+      ...prev,
+      imhb_score: rating * 2 // Convert 5 stars to 10-point scale
+    }));
+  };
+
+
 
   CreateArticle.displayName = "CreateArticle";
 
@@ -285,8 +306,27 @@ const CreateArticle = () => {
             onChange={handleInputChange}
             placeholder="Content"
             rows={12}
+            showMarkdownToolbar={true}
             className="w-full"
           />
+
+          {/* Scores Section */}
+          <div>
+            
+            {/* IMHb Score Rating */}
+            <div className="mb-2">
+              <div className="flex items-center gap-3">
+                <span className="text-base font-medium text-stone-500">IMHb</span>
+                <Rating
+                  fractions={2}
+                  emptySymbol={<Star className="w-6 h-6 stroke-stone-200" />}
+                  fullSymbol={<Star className="w-6 h-6 fill-yellow-400 stroke-yellow-400" />}
+                  initialRating={formData.imhb_score / 2}
+                  onChange={handleStarChange}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

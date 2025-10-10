@@ -265,4 +265,89 @@ router.get("/", async (req, res) => {
   }
 });
 
+// POST create rating for a post
+router.post("/:postId/ratings", async (req, res) => {
+  const { postId } = req.params;
+  const { rating, user_id } = req.body;
+  
+  try {
+    // Validate input
+    if (!rating || !user_id) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: rating and user_id"
+      });
+    }
+    
+    if (rating < 0 || rating > 10) {
+      return res.status(400).json({
+        success: false,
+        error: "Rating must be between 0 and 10"
+      });
+    }
+    
+    // Check if post exists
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('id', postId)
+      .single();
+    
+    if (postError || !post) {
+      return res.status(404).json({
+        success: false,
+        error: "Post not found"
+      });
+    }
+    
+    // Check if user exists
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user_id)
+      .single();
+    
+    if (userError || !user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+    
+    // Insert rating (UPSERT - update if exists, insert if not)
+    const { data: ratingData, error: ratingError } = await supabase
+      .from('post_ratings')
+      .upsert({
+        post_id: parseInt(postId),
+        user_id: user_id,
+        rating: parseFloat(rating),
+        created_at: new Date()
+      })
+      .select('*');
+    
+    if (ratingError) {
+      console.error("Rating insert error:", ratingError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to save rating",
+        message: ratingError.message
+      });
+    }
+    
+    return res.status(201).json({
+      success: true,
+      message: "Rating saved successfully",
+      data: ratingData[0]
+    });
+    
+  } catch (error) {
+    console.error("Rating error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Server could not save rating",
+      message: error.message
+    });
+  }
+});
+
 export default router;

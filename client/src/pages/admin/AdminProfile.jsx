@@ -212,6 +212,7 @@ const AdminProfile = () => {
             rows={4}
             maxLength={500}
             showCharCount={true}
+            showMarkdownToolbar={true}
             className="w-full"
           />
         </div>

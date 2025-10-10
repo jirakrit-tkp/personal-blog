@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getMarkdownHTML } from '../../lib/markdownUtils';
 
 const AuthorSection = () => {
   const [publicAdmin, setPublicAdmin] = useState(null);
@@ -55,7 +56,7 @@ const AuthorSection = () => {
           <p className="text-sm text-neutral-500 font-medium">-Author</p>
           <h2 className="text-2xl font-bold text-neutral-900">{publicAdmin?.name || 'Admin'}</h2>
           <div className="space-y-3 text-neutral-700 leading-relaxed">
-            <p>{publicAdmin?.bio || ' '}</p>
+            <div dangerouslySetInnerHTML={getMarkdownHTML(publicAdmin?.bio || '')} />
           </div>
         </div>
       </div>
