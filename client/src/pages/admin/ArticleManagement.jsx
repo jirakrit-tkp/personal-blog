@@ -4,6 +4,8 @@ import { useApi } from '../../hooks/useApi';
 import { AdminNavbar } from '../../components/admin';
 import { Pencil, Trash2 } from 'lucide-react';
 import CustomDropdown from '../../components/ui/CustomDropdown';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import Snackbar from '../../components/ui/Snackbar';
 
 const ArticleManagement = () => {
   const navigate = useNavigate();
@@ -14,6 +16,9 @@ const ArticleManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
   const [genres, setGenres] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState(null);
+  const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
 
   // Fetch genres from database
   useEffect(() => {
@@ -64,6 +69,57 @@ const ArticleManagement = () => {
     } else {
       setSelectedArticles(articles.map(article => article.id));
     }
+  };
+
+  const handleDeleteClick = (articleId) => {
+    setArticleToDelete(articleId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!articleToDelete) return;
+
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+      const response = await fetch(`${apiBase}/posts/${articleToDelete}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete article');
+      }
+
+      // Remove article from state
+      setArticles(prev => prev.filter(article => article.id !== articleToDelete));
+      
+      // Remove from selected if it was selected
+      setSelectedArticles(prev => prev.filter(id => id !== articleToDelete));
+      
+      setSnackbar({
+        isOpen: true,
+        message: 'Article deleted successfully',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      setSnackbar({
+        isOpen: true,
+        message: 'Failed to delete article',
+        type: 'error'
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setArticleToDelete(null);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setArticleToDelete(null);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, isOpen: false }));
   };
 
   // Filter articles based on search and filters
@@ -148,7 +204,7 @@ const ArticleManagement = () => {
          </div>
 
         {/* Articles Table */}
-        <div className="bg-white rounded-lg border border-stone-200 overflow-hidden min-h-[400px]">
+        <div className="bg-white rounded-lg border border-stone-200 overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
               <div className="text-gray-500">Loading articles...</div>
@@ -166,7 +222,7 @@ const ArticleManagement = () => {
               </div>
 
               {/* Table Body */}
-              <div className="divide-y divide-stone-200 min-h-[300px]">
+              <div className="divide-y divide-stone-200">
                 {filteredArticles.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">
                     No articles found
@@ -215,12 +271,15 @@ const ArticleManagement = () => {
                       
                       <div className="col-span-1 flex gap-6">
                         <button 
-                          className="text-gray-400 hover:text-stone-600"
+                          className="text-gray-400 hover:text-stone-600 cursor-pointer"
                           onClick={() => navigate(`/admin/articles/edit/${article.id}`)}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-red-600">
+                        <button 
+                          className="text-gray-400 hover:text-red-600 cursor-pointer"
+                          onClick={() => handleDeleteClick(article.id)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -253,6 +312,25 @@ const ArticleManagement = () => {
             </div>
           </div>
         )}
+
+        {/* Confirm Modal */}
+        <ConfirmModal
+          isOpen={showDeleteModal}
+          onClose={handleCloseDeleteModal}
+          onConfirm={handleDeleteConfirm}
+          title="Delete article"
+          message="Do you want to delete this article?"
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
+
+        {/* Snackbar */}
+        <Snackbar
+          isOpen={snackbar.isOpen}
+          onClose={handleCloseSnackbar}
+          message={snackbar.message}
+          type={snackbar.type}
+        />
       </div>
     </div>
   );

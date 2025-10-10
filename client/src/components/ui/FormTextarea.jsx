@@ -15,6 +15,7 @@ const FormTextarea = ({
   className = '',
   showCharCount = false,
   showMarkdownToolbar = false,
+  hasError = false,
   ...props 
 }) => {
   const textareaRef = useRef(null);
@@ -29,7 +30,9 @@ const FormTextarea = ({
   
   const stateClasses = disabled || readOnly
     ? 'bg-stone-200/50 text-stone-400 border-0'
-    : 'bg-white border border-stone-300 focus:ring-2 focus:ring-stone-500 focus:border-stone-500';
+    : hasError
+      ? 'bg-white border-2 border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+      : 'bg-white border border-stone-300 focus:ring-2 focus:ring-stone-500 focus:border-stone-500';
 
   const labelClasses = disabled || readOnly
     ? 'block text-base font-medium text-stone-500/50 mb-2'
@@ -77,7 +80,7 @@ const FormTextarea = ({
       )}
       
       {showMarkdownToolbar && !disabled && !readOnly && (
-        <div className="flex justify-between items-center p-2 bg-stone-50 border border-stone-300 rounded-t-md border-b-0">
+        <div className={`flex justify-between items-center p-2 bg-stone-50 rounded-t-md border-b-0 ${hasError ? 'border-2 border-red-500' : 'border border-stone-300'}`}>
           {/* Left side: Write/Review tabs */}
           <div className="flex gap-1">
             <button
@@ -183,6 +186,7 @@ FormTextarea.propTypes = {
   className: PropTypes.string,
   showCharCount: PropTypes.bool,
   showMarkdownToolbar: PropTypes.bool,
+  hasError: PropTypes.bool,
 };
 
 FormTextarea.displayName = 'FormTextarea';

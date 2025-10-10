@@ -8,6 +8,8 @@ import CustomDropdown from '../ui/CustomDropdown';
 import FormInput from '../ui/FormInput';
 import FormTextarea from '../ui/FormTextarea';
 import { AdminNavbar } from './index.js';
+import ConfirmModal from '../ui/ConfirmModal';
+import Snackbar from '../ui/Snackbar';
 
 const ArticleForm = ({ mode = 'create', postId = null }) => {
   const navigate = useNavigate();
@@ -18,8 +20,10 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
   const [isLoading, setIsLoading] = useState(mode === 'edit');
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
   const [genres, setGenres] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -75,7 +79,11 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
           }
         } catch (error) {
           console.error('Failed to fetch post:', error);
-          alert('Failed to load post data');
+          setSnackbar({
+            isOpen: true,
+            message: 'Failed to load post data',
+            type: 'error'
+          });
           navigate('/admin/articles');
         } finally {
           setIsLoading(false);
@@ -92,6 +100,14 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -103,6 +119,14 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
         setPreviewUrl(reader.result);
       };
       reader.readAsDataURL(file);
+
+      // Clear validation error when user uploads image
+      if (validationErrors.image) {
+        setValidationErrors(prev => ({
+          ...prev,
+          image: ''
+        }));
+      }
     }
   };
 
@@ -118,31 +142,51 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
       ...prev,
       genre_ids: selectedIds
     }));
+
+    // Clear validation error when user selects genres
+    if (validationErrors.genres) {
+      setValidationErrors(prev => ({
+        ...prev,
+        genres: ''
+      }));
+    }
   };
 
   const handleSubmit = async (publish = false) => {
+    const errors = {};
+    
     if (!formData.title.trim()) {
-      alert('Please enter a title');
-      return;
+      errors.title = 'Title is required';
     }
     
     if (!formData.description.trim()) {
-      alert('Please enter an introduction');
-      return;
+      errors.description = 'Introduction is required';
     }
     
     if (!formData.content.trim()) {
-      alert('Please enter content');
-      return;
+      errors.content = 'Content is required';
     }
 
     if (formData.genre_ids.length === 0) {
-      alert('Please select at least one genre');
-      return;
+      errors.genres = 'At least one genre is required';
     }
 
     if (mode === 'create' && !selectedFile) {
-      alert('Please upload a thumbnail image');
+      errors.image = 'Thumbnail image is required';
+    }
+
+    if (!formData.imhb_score || formData.imhb_score === 0) {
+      errors.rating = 'IMHb rating is required';
+    }
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setSnackbar({
+        isOpen: true,
+        message: 'Please fill in all required fields',
+        type: 'error'
+      });
       return;
     }
 
@@ -166,7 +210,11 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
           imageUrl = imageResponse.data.imageUrl;
         } catch (imageError) {
           console.error('Image upload failed:', imageError);
-          alert('Failed to upload image. Please try again.');
+          setSnackbar({
+            isOpen: true,
+            message: 'Failed to upload image. Please try again.',
+            type: 'error'
+          });
           setIsSubmitting(false);
           return;
         }
@@ -195,8 +243,12 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
             user_id: user?.id
           });
 
-          alert(publish ? 'Article published successfully!' : 'Article saved as draft!');
-          navigate('/admin/articles');
+          setSnackbar({
+            isOpen: true,
+            message: publish ? 'Article published successfully!' : 'Article saved as draft!',
+            type: 'success'
+          });
+          setTimeout(() => navigate('/admin/articles'), 2000);
         }
       } else {
         // Update existing post
@@ -218,13 +270,21 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
             user_id: user?.id
           });
 
-          alert(publish ? 'Article published successfully!' : 'Article updated successfully!');
-          navigate('/admin/articles');
+          setSnackbar({
+            isOpen: true,
+            message: publish ? 'Article published successfully!' : 'Article updated successfully!',
+            type: 'success'
+          });
+          setTimeout(() => navigate('/admin/articles'), 2000);
         }
       }
     } catch (error) {
       console.error('Submit error:', error);
-      alert('Failed to save article: ' + (error.response?.data?.error || error.message));
+      setSnackbar({
+        isOpen: true,
+        message: 'Failed to save article: ' + (error.response?.data?.error || error.message),
+        type: 'error'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -234,12 +294,44 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
     navigate('/admin/articles');
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, isOpen: false }));
+  };
+
   // IMHb Star Rating Handler
+  const handleStarClick = (rating) => {
+    // If clicking the same rating, cancel it (set to 0)
+    const currentRating = formData.imhb_score / 2;
+    const newScore = rating === currentRating ? 0 : rating * 2;
+    
+    setFormData(prev => ({
+      ...prev,
+      imhb_score: newScore // Convert 5 stars to 10-point scale
+    }));
+
+    // Clear validation error when user selects rating
+    if (validationErrors.rating && newScore > 0) {
+      setValidationErrors(prev => ({
+        ...prev,
+        rating: ''
+      }));
+    }
+  };
+
   const handleStarChange = (rating) => {
+    // This is called when hovering/selecting different rating
     setFormData(prev => ({
       ...prev,
       imhb_score: rating * 2 // Convert 5 stars to 10-point scale
     }));
+
+    // Clear validation error when user selects rating
+    if (validationErrors.rating) {
+      setValidationErrors(prev => ({
+        ...prev,
+        rating: ''
+      }));
+    }
   };
 
   if (isLoading) {
@@ -291,9 +383,10 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
           <div>
             <label className="block text-base font-medium text-stone-700 mb-4">
               Thumbnail Image
+              {validationErrors.image && <span className="text-red-500 ml-1">*</span>}
             </label>
             <div className="flex items-end gap-6">
-              <div className="w-1/2 h-[260px] bg-stone-200 rounded-lg border-2 border-dashed border-stone-400 flex items-center justify-center overflow-hidden">
+              <div className={`w-1/2 h-[260px] bg-stone-200 rounded-lg border-2 border-dashed ${validationErrors.image ? 'border-red-500' : 'border-stone-400'} flex items-center justify-center overflow-hidden`}>
                 {previewUrl ? (
                   <img 
                     src={previewUrl} 
@@ -330,7 +423,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
           {/* Genre Selection */}
           <div>
             <CustomDropdown
-              label="Genre"
+              label={`Genre ${validationErrors.genres ? '*' : ''}`}
               options={genres.map(genre => genre.name)}
               value={selectedGenres}
               onChange={handleGenreChange}
@@ -339,6 +432,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
               searchable={true}
               showAllOption={true}
               className="w-1/2"
+              hasError={!!validationErrors.genres}
             />
           </div>
 
@@ -362,6 +456,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
             onChange={handleInputChange}
             placeholder="Article title"
             className="w-full"
+            hasError={!!validationErrors.title}
           />
 
           {/* Introduction */}
@@ -375,6 +470,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
             maxLength={120}
             showCharCount={true}
             className="w-full"
+            hasError={!!validationErrors.description}
           />
 
           {/* Content */}
@@ -387,6 +483,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
             rows={12}
             showMarkdownToolbar={true}
             className="w-full"
+            hasError={!!validationErrors.content}
           />
 
           {/* Scores Section */}
@@ -397,16 +494,26 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
                 <span className="text-base font-medium text-stone-500">IMHb</span>
                 <Rating
                   fractions={2}
-                  emptySymbol={<Star className="w-6 h-6 stroke-stone-200" />}
+                  emptySymbol={<Star className={`w-6 h-6 ${validationErrors.rating ? 'stroke-red-500' : 'stroke-stone-200'}`} />}
                   fullSymbol={<Star className="w-6 h-6 fill-yellow-400 stroke-yellow-400" />}
                   initialRating={formData.imhb_score / 2}
                   onChange={handleStarChange}
+                  onClick={handleStarClick}
                 />
               </div>
             </div>
           </div>
         </div>
       </div>
+
+
+      {/* Snackbar */}
+      <Snackbar
+        isOpen={snackbar.isOpen}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
+        type={snackbar.type}
+      />
     </div>
   );
 };
