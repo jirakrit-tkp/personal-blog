@@ -19,7 +19,8 @@ router.post("/", [validateCreatePostData], async (req, res) => {
         content: content.trim(),
         status_id: parseInt(status_id),
         author_id: author_id,
-        date: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
         likes_count: 0
       })
       .select('id')
@@ -221,7 +222,7 @@ router.get("/", async (req, res) => {
           )
         )
       `, { count: 'exact' })
-      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (keyword) query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%,content.ilike.%${keyword}%`);
@@ -320,8 +321,9 @@ router.post("/:postId/ratings", async (req, res) => {
       .upsert({
         post_id: parseInt(postId),
         user_id: user_id,
-        rating: parseFloat(rating),
-        created_at: new Date()
+        rating: parseFloat(rating)
+      }, {
+        onConflict: 'post_id,user_id'
       })
       .select('*');
     

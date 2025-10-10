@@ -1,15 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { AdminNavbar } from '../../components/admin';
+import { Pencil, Trash2 } from 'lucide-react';
+import CustomDropdown from '../../components/ui/CustomDropdown';
 
 const ArticleManagement = () => {
+  const navigate = useNavigate();
   const { fetchPosts, loading } = useApi();
   const [articles, setArticles] = useState([]);
   const [selectedArticles, setSelectedArticles] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
+  const [genres, setGenres] = useState([]);
+
+  // Fetch genres from database
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+        const response = await fetch(`${apiBase}/genres`);
+        const data = await response.json();
+        if (data.success) {
+          setGenres(data.data.map(genre => genre.name));
+        }
+      } catch (error) {
+        console.error('Failed to load genres:', error);
+      }
+    };
+    
+    fetchGenres();
+  }, []);
 
   // Fetch articles from database
   useEffect(() => {
@@ -48,15 +70,24 @@ const ArticleManagement = () => {
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          article.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !statusFilter || article.status === statusFilter;
-    const matchesGenre = !genreFilter || 
+    
+    // Fix status mapping - use transformed status field
+    const articleStatus = article.status || 'Draft';
+    const matchesStatus = !statusFilter || statusFilter === 'All Status' || articleStatus === statusFilter;
+    
+    const matchesGenre = !genreFilter || genreFilter === 'All Genres' ||
                         article.genres?.some(genre => genre.name === genreFilter);
     
     return matchesSearch && matchesStatus && matchesGenre;
   });
 
-  // Get unique genres from articles
-  const genres = [...new Set(
+  // Get unique statuses from articles
+  const statuses = [...new Set(
+    articles.map(article => article.status).filter(Boolean)
+  )];
+
+  // Get unique genres from articles (only those actually used)
+  const articleGenres = [...new Set(
     articles.flatMap(article => 
       article.genres?.map(genre => genre.name) || []
     )
@@ -79,45 +110,45 @@ const ArticleManagement = () => {
       />
 
       <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
-        {/* Search and Filters */}
-        <div className="mb-6">
-          <div className="flex gap-4 items-center">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search articles..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
-              />
-            </div>
-            <div className="flex gap-3">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
-              >
-                <option value="">All Status</option>
-                <option value="Published">Published</option>
-                <option value="Draft">Draft</option>
-                <option value="Archived">Archived</option>
-              </select>
-              <select
-                value={genreFilter}
-                onChange={(e) => setGenreFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
-              >
-                <option value="">All Genres</option>
-                {genres.map(genre => (
-                  <option key={genre} value={genre}>{genre}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+         {/* Search and Filters */}
+         <div className="mb-6 [&>*]:mb-0">
+           <div className="flex gap-4 items-center">
+             <div className="flex-1">
+               <input
+                 type="text"
+                 placeholder="Search..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 className="w-1/2 h-10 px-4 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+               />
+             </div>
+             <div className="flex gap-3">
+                <div className="h-10 flex items-center">
+                  <CustomDropdown
+                    label=""
+                    options={['All Status', ...statuses]}
+                    value={statusFilter || 'All Status'}
+                    onChange={setStatusFilter}
+                    placeholder="Status"
+                    className="w-32 [&>label]:mb-0"
+                  />
+                </div>
+                <div className="h-10 flex items-center">
+                  <CustomDropdown
+                    label=""
+                    options={['All Genres', ...articleGenres]}
+                    value={genreFilter || 'All Genres'}
+                    onChange={setGenreFilter}
+                    placeholder="Genre"
+                    className="w-32 [&>label]:mb-0"
+                  />
+                </div>
+             </div>
+           </div>
+         </div>
 
         {/* Articles Table */}
-        <div className="bg-white rounded-lg border border-stone-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-stone-200 overflow-hidden min-h-[400px]">
           {loading ? (
             <div className="p-8 text-center">
               <div className="text-gray-500">Loading articles...</div>
@@ -127,27 +158,15 @@ const ArticleManagement = () => {
               {/* Table Header */}
               <div className="bg-stone-50 border-b border-stone-200">
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-medium text-gray-700">
-                  <div className="col-span-1">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedArticles.length === filteredArticles.length && filteredArticles.length > 0}
-                        onChange={handleSelectAll}
-                        className="mr-2"
-                      />
-                      Select All
-                    </label>
-                  </div>
-                  <div className="col-span-4">Article Title</div>
-                  <div className="col-span-2">Genre</div>
+                  <div className="col-span-6">Article title</div>
+                  <div className="col-span-3">Genre</div>
                   <div className="col-span-2">Status</div>
-                  <div className="col-span-2">Date</div>
-                  <div className="col-span-1">Actions</div>
+                  <div className="col-span-1"></div>
                 </div>
               </div>
 
               {/* Table Body */}
-              <div className="divide-y divide-stone-200">
+              <div className="divide-y divide-stone-200 min-h-[300px]">
                 {filteredArticles.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">
                     No articles found
@@ -155,16 +174,7 @@ const ArticleManagement = () => {
                 ) : (
                   filteredArticles.map(article => (
                     <div key={article.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-stone-50">
-                      <div className="col-span-1 flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedArticles.includes(article.id)}
-                          onChange={() => handleSelectArticle(article.id)}
-                          className="mr-2"
-                        />
-                      </div>
-                      
-                      <div className="col-span-4">
+                      <div className="col-span-6">
                         <div className="font-medium text-gray-900 truncate">
                           {article.title || 'Untitled'}
                         </div>
@@ -173,9 +183,9 @@ const ArticleManagement = () => {
                         </div>
                       </div>
                       
-                      <div className="col-span-2">
+                      <div className="col-span-3">
                         <div className="flex flex-wrap gap-1">
-                          {article.genres?.slice(0, 2).map((genre, index) => (
+                          {article.genres?.map((genre, index) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded-full"
@@ -183,40 +193,35 @@ const ArticleManagement = () => {
                               {genre.name}
                             </span>
                           ))}
-                          {article.genres?.length > 2 && (
-                            <span className="text-xs text-gray-500">
-                              +{article.genres.length - 2} more
-                            </span>
-                          )}
                         </div>
                       </div>
                       
                       <div className="col-span-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          article.status === 'Published' 
-                            ? 'bg-green-100 text-green-800'
-                            : article.status === 'Draft'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {article.status || 'Draft'}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            article.status === 'published' 
+                              ? 'bg-green-500' 
+                              : 'bg-stone-400'
+                          }`}></div>
+                          <span className={`text-sm ${
+                            article.status === 'published' 
+                              ? 'text-green-600' 
+                              : 'text-stone-600'
+                          }`}>
+                            {article.status || 'Draft'}
+                          </span>
+                        </div>
                       </div>
                       
-                      <div className="col-span-2 text-sm text-gray-500">
-                        {article.date ? new Date(article.date).toLocaleDateString() : 'No date'}
-                      </div>
-                      
-                      <div className="col-span-1 flex gap-2">
-                        <button className="text-gray-400 hover:text-stone-600">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
+                      <div className="col-span-1 flex gap-6">
+                        <button 
+                          className="text-gray-400 hover:text-stone-600"
+                          onClick={() => navigate(`/admin/articles/edit/${article.id}`)}
+                        >
+                          <Pencil className="w-4 h-4" />
                         </button>
                         <button className="text-gray-400 hover:text-red-600">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

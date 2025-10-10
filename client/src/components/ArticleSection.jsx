@@ -197,7 +197,7 @@ function BlogCard(props) {
               <div className="flex items-center gap-2">
                 <span>{props.likes_count || 0} likes</span>
                 <span className="text-gray-300">|</span>
-                <span>{new Date(props.date).toLocaleDateString()}</span>
+                <span>{new Date(props.created_at || props.date).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
