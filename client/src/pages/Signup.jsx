@@ -82,15 +82,15 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen bg-stone-50 flex flex-col">
       <NavBar />
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           {/* Signup Form */}
-          <div className="bg-neutral-200 rounded-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Sign up</h1>
+          <div className="bg-stone-200 rounded-lg p-8">
+            <h1 className="text-3xl font-bold text-stone-900 mb-8">Sign up</h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* General Error */}
@@ -102,7 +102,7 @@ function Signup() {
 
               {/* Name Field */}
               <div>
-                <label htmlFor="name" className={`block text-sm font-medium mb-2 ${errors.name ? 'text-red-600' : 'text-gray-700'}`}>
+                <label htmlFor="name" className={`block text-sm font-medium mb-2 ${errors.name ? 'text-red-600' : 'text-stone-700'}`}>
                   Name
                 </label>
                 <input
@@ -115,7 +115,7 @@ function Signup() {
                   className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.name 
                       ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
+                      : 'border-stone-300 focus:ring-blue-500'
                   }`}
                 />
                 {errors.name && (
@@ -125,7 +125,7 @@ function Signup() {
 
               {/* Username Field */}
               <div>
-                <label htmlFor="username" className={`block text-sm font-medium mb-2 ${errors.username ? 'text-red-600' : 'text-gray-700'}`}>
+                <label htmlFor="username" className={`block text-sm font-medium mb-2 ${errors.username ? 'text-red-600' : 'text-stone-700'}`}>
                   Username
                 </label>
                 <input
@@ -138,7 +138,7 @@ function Signup() {
                   className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.username 
                       ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
+                      : 'border-stone-300 focus:ring-blue-500'
                   }`}
                 />
                 {errors.username && (
@@ -148,7 +148,7 @@ function Signup() {
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className={`block text-sm font-medium mb-2 ${errors.email ? 'text-red-600' : 'text-gray-700'}`}>
+                <label htmlFor="email" className={`block text-sm font-medium mb-2 ${errors.email ? 'text-red-600' : 'text-stone-700'}`}>
                   Email
                 </label>
                 <input
@@ -161,7 +161,7 @@ function Signup() {
                   className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.email 
                       ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
+                      : 'border-stone-300 focus:ring-blue-500'
                   }`}
                 />
                 {errors.email && (
@@ -171,7 +171,7 @@ function Signup() {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className={`block text-sm font-medium mb-2 ${errors.password ? 'text-red-600' : 'text-gray-700'}`}>
+                <label htmlFor="password" className={`block text-sm font-medium mb-2 ${errors.password ? 'text-red-600' : 'text-stone-700'}`}>
                   Password
                 </label>
                 <input
@@ -184,7 +184,7 @@ function Signup() {
                   className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.password 
                       ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
+                      : 'border-stone-300 focus:ring-blue-500'
                   }`}
                 />
                 {errors.password && (
@@ -196,16 +196,16 @@ function Signup() {
               <button
                 type="submit"
                 disabled={state.loading}
-                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {state.loading ? 'Creating account...' : 'Sign up'}
               </button>
             </form>
 
             {/* Login Link */}
-            <p className="text-center mt-6 text-gray-600">
+            <p className="text-center mt-6 text-stone-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-gray-900 hover:underline font-medium">
+              <Link to="/login" className="text-stone-900 hover:underline font-medium">
                 Log in
               </Link>
             </p>
@@ -217,7 +217,7 @@ function Signup() {
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-neutral-200 rounded-lg p-8 max-w-md w-full mx-4 text-center">
+          <div className="bg-stone-200 rounded-lg p-8 max-w-md w-full mx-4 text-center">
             {/* Success Icon */}
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,12 +226,12 @@ function Signup() {
             </div>
             
             {/* Success Message */}
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Registration success</h2>
+            <h2 className="text-2xl font-bold text-stone-900 mb-6">Registration success</h2>
             
             {/* Continue Button */}
             <button
               onClick={handleContinue}
-              className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors"
             >
               Continue
             </button>

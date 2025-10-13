@@ -6,7 +6,7 @@ function Post({ post, loading }) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading post...</p>
+        <p className="text-stone-600">Loading post...</p>
       </div>
     );
   }
@@ -16,7 +16,7 @@ function Post({ post, loading }) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-stone-50">
       <div className="max-w-7xl mx-auto">
         {/* Hero Image */}
         <div className="w-full h-auto pt-8 mb-8 px-0 sm:px-6 lg:px-8">
@@ -37,7 +37,7 @@ function Post({ post, loading }) {
                 <span className="bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
                   {post.category}
                 </span>
-                <span className="text-gray-600 text-sm">
+                <span className="text-stone-600 text-sm">
                   {new Date(post.created_at || post.date).toLocaleDateString('en-GB', {
                     day: '2-digit',
                     month: 'long',
@@ -47,12 +47,12 @@ function Post({ post, loading }) {
               </div>
 
               {/* Title */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-900 mb-6 leading-tight">
                 {post.title}
               </h1>
 
               {/* Introduction */}
-              <p className="text-lg sm:text-xl text-gray-700 mb-8 leading-relaxed">
+              <p className="text-lg sm:text-xl text-stone-700 mb-8 leading-relaxed">
                 {post.description}
               </p>
 
@@ -70,7 +70,7 @@ function Post({ post, loading }) {
           {/* Right Column - Author Box (20%) - Top-bottom on small, right on large */}
           <div className="w-full lg:w-1/5">
             <div className="sticky top-8">
-              <div className="bg-neutral-200 sm:rounded-lg p-6 shadow-sm border border-gray-200">
+              <div className="bg-stone-200 sm:rounded-lg p-6 shadow-sm border border-stone-200">
                 {/* Author Header - Horizontal Layout */}
                 <div className="flex items-start gap-4 mb-4">
                   <img 
@@ -79,16 +79,16 @@ function Post({ post, loading }) {
                     alt="Author profile"
                   />
                   <div className="flex-1">
-                    <p className="text-sm text-gray-500 mb-1">Author</p>
-                    <h4 className="font-semibold text-gray-900">Thompson P.</h4>
+                    <p className="text-sm text-stone-500 mb-1">Author</p>
+                    <h4 className="font-semibold text-stone-900">Thompson P.</h4>
                   </div>
                 </div>
 
                 {/* Separator Line */}
-                <div className="border-t border-gray-400 mb-4"></div>
+                <div className="border-t border-stone-400 mb-4"></div>
 
                 {/* Author Bio */}
-                <div className="space-y-3 text-sm text-gray-700">
+                <div className="space-y-3 text-sm text-stone-700">
                   <p>
                     I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness.
                   </p>

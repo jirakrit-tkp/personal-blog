@@ -174,7 +174,7 @@ const AdminProfile = () => {
       <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
         {/* Profile Picture Section */}
         <div className="flex items-center gap-6 mb-8">
-          <div className="w-22 h-22 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="w-22 h-22 bg-stone-200 rounded-full flex items-center justify-center overflow-hidden">
             <img 
               src={previewUrl || user?.profilePic || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"} 
               alt="Profile"
@@ -198,7 +198,7 @@ const AdminProfile = () => {
                   {selectedFile ? 'Change Picture' : 'Upload profile picture'}
                 </label>
                 {selectedFile && (
-                  <span className="ml-3 text-sm text-gray-600">{selectedFile.name}</span>
+                  <span className="ml-3 text-sm text-stone-600">{selectedFile.name}</span>
                 )}
               </>
             ) : (

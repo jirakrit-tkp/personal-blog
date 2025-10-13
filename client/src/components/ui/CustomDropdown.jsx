@@ -128,7 +128,7 @@ const CustomDropdown = ({
               value.map((selectedValue) => (
                 <span
                   key={selectedValue}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-xs rounded-md"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-stone-100 text-xs rounded-md"
                   onClick={(e) => {
                     if (!disabled) {
                       e.stopPropagation();
@@ -138,20 +138,20 @@ const CustomDropdown = ({
                 >
                   {selectedValue}
                   {!disabled && (
-                    <button className="ml-1 text-gray-500 hover:text-gray-700">
+                    <button className="ml-1 text-stone-500 hover:text-stone-700">
                       ✕
                     </button>
                   )}
                 </span>
               ))
             ) : (
-              <span className="text-gray-600 text-sm">
+              <span className="text-stone-600 text-sm">
                 {placeholder || `Select ${label.toLowerCase()}...`}
               </span>
             )}
           </div>
         ) : (
-          <span className={`flex-1 ${value ? "" : "text-gray-600"}`}>
+          <span className={`flex-1 ${value ? "" : "text-stone-600"}`}>
             {getDisplayValue()}
           </span>
         )}
@@ -169,10 +169,10 @@ const CustomDropdown = ({
 
       {/* Dropdown Menu */}
       {isOpen && !disabled && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-300 rounded-md shadow-lg z-50">
           {/* Search Bar */}
           {searchable && (
-            <div className="p-2 border-b border-gray-200">
+            <div className="p-2 border-b border-stone-200">
               <input
                 type="text"
                 placeholder={`Search ${label.toLowerCase()}...`}
@@ -189,7 +189,7 @@ const CustomDropdown = ({
             {/* "All" option for multiple selection */}
             {multiple && showAllOption && (
               <div
-                className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center justify-between ${
+                className={`px-3 py-2 text-sm cursor-pointer hover:bg-stone-100 flex items-center justify-between ${
                   allSelected ? 'bg-orange-50' : ''
                 }`}
                 onClick={() => handleOptionClick('All')}
@@ -207,7 +207,7 @@ const CustomDropdown = ({
             {filteredOptions.map((option) => (
               <div
                 key={option}
-                className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center justify-between ${
+                className={`px-3 py-2 text-sm cursor-pointer hover:bg-stone-100 flex items-center justify-between ${
                   isSelected(option) ? 'bg-orange-50' : ''
                 }`}
                 onClick={() => handleOptionClick(option)}

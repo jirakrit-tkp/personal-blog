@@ -175,7 +175,7 @@ const ArticleManagement = () => {
                  placeholder="Search..."
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
-                 className="w-1/2 h-10 px-4 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                 className="w-1/2 h-10 px-4 py-2 bg-white border border-stone-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                />
              </div>
              <div className="flex gap-3">
@@ -207,13 +207,13 @@ const ArticleManagement = () => {
         <div className="bg-white rounded-lg border border-stone-200 overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="text-gray-500">Loading articles...</div>
+              <div className="text-stone-500">Loading articles...</div>
             </div>
           ) : (
             <>
               {/* Table Header */}
               <div className="bg-stone-50 border-b border-stone-200">
-                <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-medium text-gray-700">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-medium text-stone-700">
                   <div className="col-span-6">Article title</div>
                   <div className="col-span-3">Genre</div>
                   <div className="col-span-2">Status</div>
@@ -224,17 +224,17 @@ const ArticleManagement = () => {
               {/* Table Body */}
               <div className="divide-y divide-stone-200">
                 {filteredArticles.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">
+                  <div className="p-8 text-center text-stone-500">
                     No articles found
                   </div>
                 ) : (
                   filteredArticles.map(article => (
                     <div key={article.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-stone-50">
                       <div className="col-span-6">
-                        <div className="font-medium text-gray-900 truncate">
+                        <div className="font-medium text-stone-900 truncate">
                           {article.title || 'Untitled'}
                         </div>
-                        <div className="text-sm text-gray-500 truncate">
+                        <div className="text-sm text-stone-500 truncate">
                           {article.description || 'No description'}
                         </div>
                       </div>
@@ -271,13 +271,13 @@ const ArticleManagement = () => {
                       
                       <div className="col-span-1 flex gap-6">
                         <button 
-                          className="text-gray-400 hover:text-stone-600 cursor-pointer"
+                          className="text-stone-400 hover:text-stone-600 cursor-pointer"
                           onClick={() => navigate(`/admin/articles/edit/${article.id}`)}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button 
-                          className="text-gray-400 hover:text-red-600 cursor-pointer"
+                          className="text-stone-400 hover:text-red-600 cursor-pointer"
                           onClick={() => handleDeleteClick(article.id)}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -295,7 +295,7 @@ const ArticleManagement = () => {
         {selectedArticles.length > 0 && (
           <div className="mt-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-stone-600">
                 {selectedArticles.length} article(s) selected
               </span>
               <div className="flex gap-2">

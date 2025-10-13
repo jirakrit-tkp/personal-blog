@@ -104,11 +104,11 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Search articles..."
-          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 pr-12 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <button
           onClick={handleSearch}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-stone-600"
         >
           <SearchIcon className="w-5 h-5" />
         </button>
@@ -118,10 +118,10 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
         >
           {loading ? (
-            <div className="p-4 text-center text-gray-500">
+            <div className="p-4 text-center text-stone-500">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-2 text-sm">Searching...</p>
             </div>
@@ -131,16 +131,16 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
                 <li key={index}>
                   <button
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 text-left hover:bg-stone-50 focus:bg-stone-50 focus:outline-none transition-colors"
                   >
-                    <span className="text-gray-900">{suggestion}</span>
+                    <span className="text-stone-900">{suggestion}</span>
                   </button>
                 </li>
               ))}
             </ul>
           ) : query.length > 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              <p className="text-sm">No articles found for "{query}"</p>
+            <div className="p-4 text-center text-stone-500">
+              <p className="text-sm">No articles found for {`"${query}"`}</p>
             </div>
           ) : null}
         </div>
