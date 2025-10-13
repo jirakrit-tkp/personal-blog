@@ -494,7 +494,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
                 <span className="text-base font-medium text-stone-500">IMHb</span>
                 <Rating
                   fractions={2}
-                  emptySymbol={<Star className={`w-6 h-6 ${validationErrors.rating ? 'stroke-red-500' : 'stroke-stone-200'}`} />}
+                  emptySymbol={<Star className={`w-6 h-6 ${validationErrors.rating ? 'stroke-red-500' : 'stroke-stone-300'}`} />}
                   fullSymbol={<Star className="w-6 h-6 fill-yellow-400 stroke-yellow-400" />}
                   initialRating={formData.imhb_score / 2}
                   onChange={handleStarChange}

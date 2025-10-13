@@ -265,15 +265,16 @@ function Comment({ postId }) {
         </div>
 
         {/* Social Share Buttons */}
-        <div className="flex items-center justify-center sm:justify-end gap-2 w-full">
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
           {/* Copy Link Button */}
           <button
             onClick={handleCopyLink}
             className="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors"
           >
             <Copy className="w-4 h-4" />
-            <span className="text-sm font-medium hidden sm:flex">Copy link</span>
+            <span className="text-sm font-medium flex">Copy link</span>
           </button>
+          <div className="flex flex-row gap-2">
           <button
             onClick={() => handleShare('facebook')}
             className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors"
@@ -292,11 +293,12 @@ function Comment({ postId }) {
           >
             <Twitter className="w-4 h-4 text-white" />
           </button>
+          </div>
         </div>
       </div>
 
       {/* Comment Input Section */}
-      <div className="mb-8 px-4">
+      <div className="mb-8 max-md:px-4">
         <label className="block text-sm font-medium text-stone-900 mb-3">
           Comment
         </label>
@@ -312,7 +314,7 @@ function Comment({ postId }) {
             <button
               onClick={handleSubmitComment}
               disabled={!comment.trim() || isSubmitting}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 !comment.trim() || isSubmitting
                   ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
                   : 'bg-stone-800 text-white hover:bg-stone-900'
@@ -325,7 +327,7 @@ function Comment({ postId }) {
       </div>
 
       {/* Comments List */}
-      <div className="space-y-6 bg-white p-4">
+      <div className="space-y-6 max-md:px-4">
         {comments.map((commentItem) => (
           <CommentItem
             key={commentItem.id}
