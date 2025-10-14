@@ -64,7 +64,7 @@ router.get("/:id", [validatePostId], async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Get post with genres
+    // Get post with genres and author
     const { data: post, error } = await supabase
       .from('posts')
       .select(`
@@ -72,6 +72,11 @@ router.get("/:id", [validatePostId], async (req, res) => {
         statuses(
           id,
           status
+        ),
+        users:author_id(
+          id,
+          name,
+          profile_pic
         ),
         post_genres!inner(
           genres(
@@ -95,10 +100,12 @@ router.get("/:id", [validatePostId], async (req, res) => {
     const transformedPost = {
       ...post,
       status: post.statuses?.status || 'Draft',
-      genres: post.post_genres?.map(pg => pg.genres) || []
+      genres: post.post_genres?.map(pg => pg.genres) || [],
+      author: post.users ? { id: post.users.id, name: post.users.name, profile_pic: post.users.profile_pic } : null
     };
     delete transformedPost.post_genres;
     delete transformedPost.statuses;
+    delete transformedPost.users;
     
     return res.status(200).json({
       success: true,
@@ -215,6 +222,11 @@ router.get("/", async (req, res) => {
           id,
           status
         ),
+        users:author_id(
+          id,
+          name,
+          profile_pic
+        ),
         post_genres(
           genres(
             id,
@@ -234,8 +246,9 @@ router.get("/", async (req, res) => {
     let transformedPosts = (data || []).map(post => ({
       ...post,
       status: post.statuses?.status || 'Draft',
-      genres: post.post_genres?.map(pg => pg.genres) || []
-    })).map(({ post_genres, statuses, ...post }) => post);
+      genres: post.post_genres?.map(pg => pg.genres) || [],
+      author: post.users ? { id: post.users.id, name: post.users.name, profile_pic: post.users.profile_pic } : null
+    })).map(({ post_genres, statuses, users, ...post }) => post);
 
     // Handle category filtering by genre name after transformation
     if (category && category !== 'Highlight') {
