@@ -1,11 +1,19 @@
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { LinkedinIcon, Github, Mail, Search } from 'lucide-react';
+import { LinkedinIcon, Github, Mail, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useArticles } from '@/hooks/useArticles';
 import SearchComponent from './Search';
+import CustomDropdown from './ui/CustomDropdown.jsx';
 
 function ArticleSection() {
+    const filterScrollRef = useRef(null);
+    const scrollFilters = (dx) => {
+        if (filterScrollRef.current) {
+            filterScrollRef.current.scrollBy({ left: dx, behavior: 'smooth' });
+        }
+    };
     const {
         articles: blogPosts,
         categories: filters,
@@ -14,11 +22,9 @@ function ArticleSection() {
         hasMore,
         selectedFilter,
         searchKeyword,
-        postsPerPage,
         updateFilter,
         updateSearchKeyword,
-        loadMoreArticles,
-        setPostsPerPage
+        loadMoreArticles
     } = useArticles();
     
     return (
@@ -31,22 +37,43 @@ function ArticleSection() {
                     
                     {/* Desktop Layout */}
                     <div className="hidden lg:block bg-stone-100 rounded-lg p-4 mb-8">
-                        <div className="flex justify-between items-center">
-                            {/* Left side - Filters/Categories */}
-                            <div className="flex items-center space-x-6">
-                                {filters.map((filter, idx) => (
-                                    <button
-                                        key={`${filter}-${idx}`}
-                                        onClick={() => updateFilter(filter)}
-                                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                            selectedFilter === filter
-                                                ? 'bg-stone-200 text-stone-800'
-                                                : 'text-stone-600 hover:text-stone-800'
-                                        }`}
-                                    >
-                                        {filter}
-                                    </button>
-                                ))}
+                        <div className="flex justify-between items-center gap-4">
+                            {/* Left side - Filters/Categories (fixed width + horizontal scroll) */}
+                            <div className="relative flex-1 min-w-0">
+                                {/* Left button */}
+                                <button
+                                    type="button"
+                                    onClick={() => scrollFilters(-200)}
+                                    className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-stone-200 rounded-full p-1 shadow-sm"
+                                    aria-label="Scroll left"
+                                >
+                                    <ChevronLeft className="w-4 h-4 text-stone-700" />
+                                </button>
+                                
+                                <div ref={filterScrollRef} className="flex items-center gap-3 w-full overflow-x-auto no-scrollbar flex-nowrap pr-10 pl-10">
+                                    {filters.map((filter, idx) => (
+                                        <button
+                                            key={`${filter}-${idx}`}
+                                            onClick={() => updateFilter(filter)}
+                                            className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                                                selectedFilter === filter
+                                                    ? 'bg-stone-200 text-stone-800'
+                                                    : 'text-stone-600 hover:text-stone-800'
+                                            }`}
+                                        >
+                                            {filter}
+                                        </button>
+                                    ))}
+                                </div>
+                                {/* Right button */}
+                                <button
+                                    type="button"
+                                    onClick={() => scrollFilters(200)}
+                                    className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-stone-200 rounded-full p-1 shadow-sm"
+                                    aria-label="Scroll right"
+                                >
+                                    <ChevronRight className="w-4 h-4 text-stone-700" />
+                                </button>
                             </div>
                             
                             {/* Right side - Search */}
@@ -72,24 +99,16 @@ function ArticleSection() {
                                 />
                             </div>
                             
-                            {/* Category Label */}
-                            <div className="text-stone-800 font-medium">
-                                Category
-                            </div>
-                            
-                            {/* Category Select */}
-                            <Select value={selectedFilter} onValueChange={updateFilter}>
-                                <SelectTrigger className="w-full bg-white border-stone-200 focus:border-stone-400">
-                                    <SelectValue placeholder="Select category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {filters.map((filter, idx) => (
-                                        <SelectItem key={`${filter}-${idx}`} value={filter}>
-                                            {filter}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            {/* Genre Dropdown */}
+                            <CustomDropdown 
+                              label="Genre"
+                              options={filters}
+                              value={selectedFilter}
+                              onChange={updateFilter}
+                              placeholder="Select genre..."
+                              searchable={true}
+                              className="w-full"
+                            />
                         </div>
                     </div>
 
@@ -136,22 +155,7 @@ function ArticleSection() {
                                 {loadingMore ? 'Loading...' : hasMore ? 'View More' : 'No more posts'}
                             </button>
 
-                            {/* Posts per page selector - Smaller and below */}
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-stone-500">Show:</span>
-                                <Select value={postsPerPage.toString()} onValueChange={(value) => setPostsPerPage(parseInt(value))}>
-                                    <SelectTrigger className="w-16 h-8 text-xs">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="3">3</SelectItem>
-                                        <SelectItem value="6">6</SelectItem>
-                                        <SelectItem value="9">9</SelectItem>
-                                        <SelectItem value="12">12</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <span className="text-xs text-stone-500">posts per page</span>
-                            </div>
+                            {/* Posts per page selector removed: fixed at 6 via pagination hook default */}
                         </div>
                     )}
                 </div>
@@ -187,13 +191,19 @@ function BlogCard(props) {
               {props.title}
               </h2>
             </Link>
-            <p className="text-muted-foreground text-sm mb-4 flex-grow line-clamp-3">
+            <p className="text-muted-foreground text-stone-400 text-sm mb-4 flex-grow line-clamp-3">
             {props.description}</p>
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center">
-                <img className="w-8 h-8 rounded-full mr-2" src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg" alt="Author" />
-                <span>Author</span>
-              </div>
+              {props.author && (
+                <div className="flex items-center">
+                  {props.author.profile_pic && (
+                    <img className="w-8 h-8 rounded-full mr-2 object-cover" src={props.author.profile_pic} alt={props.author.name || ''} />
+                  )}
+                  {props.author.name && (
+                    <span>{props.author.name}</span>
+                  )}
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <span>{props.likes_count || 0} likes</span>
                 <span className="text-stone-300">|</span>

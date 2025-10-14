@@ -24,8 +24,9 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
             .order('date', { ascending: false })
             .limit(10);
 
-          if (selectedFilter && selectedFilter !== 'Highlight' && !Number.isNaN(Number(selectedFilter))) {
-            q = q.eq('category_id', Number(selectedFilter));
+          if (selectedFilter && selectedFilter !== 'Highlight') {
+            // Use genre name instead of category_id
+            q = q.eq('genre', selectedFilter);
           }
 
           const kw = `%${query.trim()}%`;
@@ -69,7 +70,14 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
   }, []);
 
   const handleInputChange = (e) => {
-    setQuery(e.target.value);
+    const newQuery = e.target.value;
+    setQuery(newQuery);
+    // Trigger search on every change
+    if (newQuery.trim()) {
+      onSearch?.(newQuery);
+    } else {
+      onSearch?.('');
+    }
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -104,7 +112,7 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Search articles..."
-          className="w-full px-4 py-3 pr-12 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <button
           onClick={handleSearch}
