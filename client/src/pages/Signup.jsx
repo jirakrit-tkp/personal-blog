@@ -78,7 +78,7 @@ function Signup() {
 
   const handleContinue = () => {
     setShowSuccessModal(false);
-    navigate('/');
+    navigate('/login');
   };
 
   return (
