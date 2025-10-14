@@ -75,7 +75,7 @@ function AuthProvider(props) {
       setState((prevState) => ({ ...prevState, loading: true, error: null }));
       await axios.post(`${apiBase}/auth/register`, data);
       setState((prevState) => ({ ...prevState, loading: false, error: null }));
-      navigate("/login");
+      return { success: true };
     } catch (error) {
       const msg = error.response?.data?.error || "Registration failed";
       setState((prevState) => ({ ...prevState, loading: false, error: msg }));
