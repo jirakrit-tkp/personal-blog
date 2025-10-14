@@ -25,12 +25,12 @@ function ArticleSection() {
         <section className="py-12 px-8">
                 <div className="max-w-7xl mx-auto">
                     {/* Heading */}
-                    <h2 className="text-3xl font-bold text-neutral-900 mb-8">
+                    <h2 className="text-3xl font-bold text-stone-900 mb-8">
                         Latest articles
                     </h2>
                     
                     {/* Desktop Layout */}
-                    <div className="hidden lg:block bg-neutral-100 rounded-lg p-4 mb-8">
+                    <div className="hidden lg:block bg-stone-100 rounded-lg p-4 mb-8">
                         <div className="flex justify-between items-center">
                             {/* Left side - Filters/Categories */}
                             <div className="flex items-center space-x-6">
@@ -40,8 +40,8 @@ function ArticleSection() {
                                         onClick={() => updateFilter(filter)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                             selectedFilter === filter
-                                                ? 'bg-neutral-200 text-neutral-800'
-                                                : 'text-neutral-600 hover:text-neutral-800'
+                                                ? 'bg-stone-200 text-stone-800'
+                                                : 'text-stone-600 hover:text-stone-800'
                                         }`}
                                     >
                                         {filter}
@@ -61,7 +61,7 @@ function ArticleSection() {
                     </div>
 
                     {/* Mobile Layout */}
-                    <div className="lg:hidden bg-neutral-100 rounded-lg p-4 mb-8">
+                    <div className="lg:hidden bg-stone-100 rounded-lg p-4 mb-8">
                         <div className="space-y-4">
                             {/* Search Input */}
                             <div className="w-full">
@@ -73,13 +73,13 @@ function ArticleSection() {
                             </div>
                             
                             {/* Category Label */}
-                            <div className="text-neutral-800 font-medium">
+                            <div className="text-stone-800 font-medium">
                                 Category
                             </div>
                             
                             {/* Category Select */}
                             <Select value={selectedFilter} onValueChange={updateFilter}>
-                                <SelectTrigger className="w-full bg-white border-neutral-200 focus:border-neutral-400">
+                                <SelectTrigger className="w-full bg-white border-stone-200 focus:border-stone-400">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -111,8 +111,8 @@ function ArticleSection() {
                             {/* Loading indicator when loading more */}
                             {loadingMore && (
                                 <div className="mt-6 text-center">
-                                    <div className="inline-flex items-center gap-2 text-gray-500">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700"></div>
+                                    <div className="inline-flex items-center gap-2 text-stone-500">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-stone-700"></div>
                                         <span className="text-sm">Loading more posts...</span>
                                     </div>
                                 </div>
@@ -129,8 +129,8 @@ function ArticleSection() {
                                 disabled={!hasMore || loadingMore}
                                 className={`px-8 py-3 text-base font-semibold rounded-lg transition-colors ${
                                     hasMore && !loadingMore
-                                        ? 'bg-gray-600 text-white hover:bg-gray-700'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        ? 'bg-stone-600 text-white hover:bg-stone-700'
+                                        : 'bg-stone-300 text-stone-500 cursor-not-allowed'
                                 }`}
                             >
                                 {loadingMore ? 'Loading...' : hasMore ? 'View More' : 'No more posts'}
@@ -138,7 +138,7 @@ function ArticleSection() {
 
                             {/* Posts per page selector - Smaller and below */}
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Show:</span>
+                                <span className="text-xs text-stone-500">Show:</span>
                                 <Select value={postsPerPage.toString()} onValueChange={(value) => setPostsPerPage(parseInt(value))}>
                                     <SelectTrigger className="w-16 h-8 text-xs">
                                         <SelectValue />
@@ -150,7 +150,7 @@ function ArticleSection() {
                                         <SelectItem value="12">12</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <span className="text-xs text-gray-500">posts per page</span>
+                                <span className="text-xs text-stone-500">posts per page</span>
                             </div>
                         </div>
                     )}
@@ -177,7 +177,7 @@ function BlogCard(props) {
                 </span>
               ))}
               {genres.length === 0 && (
-                <span className="bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-600">
+                <span className="bg-stone-200 rounded-full px-3 py-1 text-sm font-semibold text-stone-600">
                   Uncategorized
                 </span>
               )}
@@ -196,7 +196,7 @@ function BlogCard(props) {
               </div>
               <div className="flex items-center gap-2">
                 <span>{props.likes_count || 0} likes</span>
-                <span className="text-gray-300">|</span>
+                <span className="text-stone-300">|</span>
                 <span>{new Date(props.created_at || props.date).toLocaleDateString()}</span>
               </div>
             </div>
@@ -209,32 +209,32 @@ function LoadingCard() {
     return (
         <div className="flex flex-col gap-4 animate-pulse">
             {/* Image skeleton */}
-            <div className="h-[212px] sm:h-[360px] bg-gray-200 rounded-md flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Loading...</span>
+            <div className="h-[212px] sm:h-[360px] bg-stone-200 rounded-md flex items-center justify-center">
+                <span className="text-stone-400 text-sm">Loading...</span>
             </div>
             
             <div className="flex flex-col gap-3">
                 {/* Category skeleton */}
-                <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+                <div className="h-6 w-20 bg-stone-200 rounded-full"></div>
                 
                 {/* Title skeleton */}
                 <div className="space-y-2">
-                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-5 bg-stone-200 rounded w-3/4"></div>
+                    <div className="h-5 bg-stone-200 rounded w-1/2"></div>
                 </div>
                 
                 {/* Description skeleton */}
                 <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-full"></div>
-                    <div className="h-4 bg-gray-200 rounded w-full"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-stone-200 rounded w-full"></div>
+                    <div className="h-4 bg-stone-200 rounded w-full"></div>
+                    <div className="h-4 bg-stone-200 rounded w-2/3"></div>
                 </div>
                 
                 {/* Author info skeleton */}
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                    <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    <div className="w-8 h-8 bg-stone-200 rounded-full"></div>
+                    <div className="h-4 bg-stone-200 rounded w-24"></div>
+                    <div className="h-4 bg-stone-200 rounded w-16"></div>
                 </div>
             </div>
         </div>

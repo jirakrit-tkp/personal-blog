@@ -352,4 +352,128 @@ router.post("/:postId/ratings", async (req, res) => {
   }
 });
 
+// POST like a post (record per-user like)
+router.post("/:postId/likes", async (req, res) => {
+  const { postId } = req.params;
+  const { user_id } = req.body;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "Missing required field: user_id" });
+    }
+
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id, likes_count')
+      .eq('id', postId)
+      .single();
+
+    if (postError || !post) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+
+    // prevent duplicate
+    const { data: existing, error: checkErr } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    if (checkErr) {
+      return res.status(500).json({ success: false, error: "Failed to check like" });
+    }
+    if (existing) {
+      return res.status(400).json({ success: false, error: "Already liked" });
+    }
+
+    const { error: likeErr } = await supabase
+      .from('post_likes')
+      .insert({ post_id: parseInt(postId), user_id, created_at: new Date() });
+    if (likeErr) throw likeErr;
+
+    const nextCount = (post.likes_count || 0) + 1;
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ likes_count: nextCount, updated_at: new Date() })
+      .eq('id', postId);
+    if (updateError) throw updateError;
+
+    return res.status(201).json({ success: true, likes_count: nextCount });
+  } catch (error) {
+    console.error("Like error:", error);
+    return res.status(500).json({ success: false, error: "Server could not like post", message: error.message });
+  }
+});
+
+// DELETE unlike a post (remove per-user like)
+router.delete("/:postId/likes", async (req, res) => {
+  const { postId } = req.params;
+  const { user_id } = req.body;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "Missing required field: user_id" });
+    }
+
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id, likes_count')
+      .eq('id', postId)
+      .single();
+
+    if (postError || !post) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+
+    const { data: deleted, error: delErr } = await supabase
+      .from('post_likes')
+      .delete()
+      .eq('post_id', postId)
+      .eq('user_id', user_id)
+      .select('id');
+    if (delErr) throw delErr;
+    if (!deleted || deleted.length === 0) {
+      return res.status(404).json({ success: false, error: "Like not found" });
+    }
+
+    const nextCount = Math.max((post.likes_count || 0) - 1, 0);
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ likes_count: nextCount, updated_at: new Date() })
+      .eq('id', postId);
+    if (updateError) throw updateError;
+
+    return res.status(200).json({ success: true, likes_count: nextCount });
+  } catch (error) {
+    console.error("Unlike error:", error);
+    return res.status(500).json({ success: false, error: "Server could not unlike post", message: error.message });
+  }
+});
+
+// GET check if user liked a post
+router.get("/:postId/likes/check", async (req, res) => {
+  const { postId } = req.params;
+  const { user_id } = req.query;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "Missing required field: user_id" });
+    }
+
+    const { data: like, error } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user_id)
+      .maybeSingle();
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, isLiked: !!like });
+  } catch (error) {
+    console.error("Check like error:", error);
+    return res.status(500).json({ success: false, error: "Failed to check like status", message: error.message });
+  }
+});
+
 export default router;

@@ -20,7 +20,7 @@ function NotFound() {
           {/* Button */}
           <Link 
             to="/"
-            className="inline-block bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            className="inline-block bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors"
           >
             Go To Homepage
           </Link>

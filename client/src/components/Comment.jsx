@@ -1,22 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Heart, Copy, Facebook, Linkedin, Twitter, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Copy, Facebook, Linkedin, Twitter, X, Trash, Star } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/authentication.jsx';
 import LoginModal from './LoginModal';
+import axios from 'axios';
 
 // Individual Comment Component
-function CommentItem({ comment, replies = [], onReply }) {
-  const [showReplyForm, setShowReplyForm] = useState(false);
+function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }) {
   const [replyText, setReplyText] = useState('');
 
   const handleReply = () => {
     if (replyText.trim()) {
       onReply(comment.id, replyText);
       setReplyText('');
-      setShowReplyForm(false);
     }
   };
 
   return (
-    <div className="border-b border-gray-200 pb-4 mb-4 last:border-b-0">
+    <div className="border-b border-stone-200 pb-4 mb-4 last:border-b-0">
       {/* Comment Header */}
       <div className="flex items-center gap-3 mb-3">
         <img 
@@ -25,72 +27,92 @@ function CommentItem({ comment, replies = [], onReply }) {
           alt={comment.author}
         />
         <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 text-sm">{comment.author}</h4>
-          <p className="text-xs text-gray-500">{comment.created_at || comment.date}</p>
+          <h4 className="font-semibold text-stone-900 text-sm inline-flex items-center gap-2">
+            <span>{comment.author}</span>
+            {typeof comment.rating === 'number' && comment.rating > 0 && (
+              <span className="text-xs text-stone-500 inline-flex items-center gap-1 align-middle">
+                <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                {Math.round(comment.rating)}
+              </span>
+            )}
+          </h4>
+          <p className="text-xs text-stone-400">{comment.created_at || comment.date}</p>
         </div>
+        {currentUserId && comment.user_id === currentUserId && (
+          <button
+            onClick={() => onDelete(comment.id, Boolean(comment.parent_id))}
+            className="p-1 text-stone-500 hover:text-stone-700"
+            aria-label="Delete comment"
+          >
+            <Trash className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Comment Content */}
       <div className="ml-11">
-        <p className="text-gray-700 text-sm leading-relaxed mb-3">{comment.content}</p>
+        <p className="text-stone-700 text-base leading-relaxed mb-2">{comment.content}</p>
         
-        {/* Reply Button */}
-        <button 
-          onClick={() => setShowReplyForm(!showReplyForm)}
-          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-        >
-          Reply
-        </button>
-
-        {/* Reply Form */}
-        {showReplyForm && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-            <textarea
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder="Write a reply..."
-              className="w-full p-2 border border-gray-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows="3"
-            />
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={handleReply}
-                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-              >
-                Reply
-              </button>
-              <button
-                onClick={() => {
-                  setShowReplyForm(false);
-                  setReplyText('');
-                }}
-                className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Reply Inline Input moved to bottom (rendered after replies) */}
 
         {/* Replies */}
         {replies.length > 0 && (
           <div className="mt-4 ml-4 space-y-4">
             {replies.map((reply) => (
-              <div key={reply.id} className="border-l-2 border-gray-200 pl-4">
+              <div key={reply.id} className="border-l-2 border-stone-200 pl-4">
                 <div className="flex items-center gap-2 mb-2">
                   <img 
                     className="w-6 h-6 rounded-full" 
                     src={reply.avatar || "https://via.placeholder.com/24x24?text=U"} 
                     alt={reply.author}
                   />
-                  <h5 className="font-medium text-gray-900 text-xs">{reply.author}</h5>
-                  <p className="text-xs text-gray-500">{reply.created_at || reply.date}</p>
+                  <h5 className="font-medium text-stone-900 text-xs inline-flex items-center gap-1">
+                    <span>{reply.author}</span>
+                    {typeof reply.rating === 'number' && reply.rating > 0 && (
+                      <span className="text-[10px] text-stone-500 inline-flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        {Math.round(reply.rating)}
+                      </span>
+                    )}
+                  </h5>
+                  <p className="text-xs text-stone-400">{reply.created_at || reply.date}</p>
+                  {currentUserId && reply.user_id === currentUserId && (
+                    <button
+                      onClick={() => onDelete(reply.id, true)}
+                      className="ml-auto p-1 text-stone-500 hover:text-stone-700"
+                      aria-label="Delete reply"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                <p className="text-gray-700 text-xs leading-relaxed">{reply.content}</p>
+                <p className="text-stone-700 text-sm leading-relaxed">{reply.content}</p>
               </div>
             ))}
           </div>
         )}
+
+        {/* Reply Input at the bottom */}
+        <div className="mt-3">
+          <div className="w-full max-w-md flex items-center gap-2">
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onInput={(e) => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply(); } }}
+              placeholder="Write a reply..."
+              rows="1"
+              className="w-full pl-3 pr-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white text-stone-900 resize-none no-scrollbar"
+            />
+            <button
+              onClick={handleReply}
+              disabled={!replyText.trim()}
+              className={`${!replyText.trim() ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-stone-800 text-white hover:bg-stone-900'} h-9 px-4 text-xs rounded-full font-medium`}
+            >
+              Reply
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -115,7 +137,7 @@ function Toast({ message, onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="text-white hover:text-gray-200 transition-colors"
+          className="text-white hover:text-stone-200 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -126,65 +148,148 @@ function Toast({ message, onClose }) {
 
 // Main Comment Component with all functionality
 function Comment({ postId }) {
-  const [likes, setLikes] = useState(321);
+  const navigate = useNavigate();
+  const { isAuthenticated, state } = useAuth();
+  const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: "Sarah Johnson",
-      date: "2 hours ago",
-      content: "Great article! I've been looking for information about this topic for a while. Thanks for sharing your insights.",
-      avatar: "https://via.placeholder.com/32x32?text=SJ",
-      replies: [
-        {
-          id: 11,
-          author: "Author",
-          date: "1 hour ago",
-          content: "Thank you Sarah! I'm glad you found it helpful.",
-          avatar: "https://via.placeholder.com/24x24?text=A"
-        }
-      ]
-    },
-    {
-      id: 2,
-      author: "Mike Chen",
-      date: "4 hours ago",
-      content: "This is exactly what I needed to know. The examples you provided really helped me understand the concept better.",
-      avatar: "https://via.placeholder.com/32x32?text=MC",
-      replies: []
-    },
-    {
-      id: 3,
-      author: "Emily Davis",
-      date: "6 hours ago",
-      content: "I have a question about the implementation. Could you provide more details about the configuration?",
-      avatar: "https://via.placeholder.com/32x32?text=ED",
-      replies: [
-        {
-          id: 31,
-          author: "Author",
-          date: "5 hours ago",
-          content: "Sure Emily! I'll add a detailed configuration section in my next post.",
-          avatar: "https://via.placeholder.com/24x24?text=A"
-        },
-        {
-          id: 32,
-          author: "Emily Davis",
-          date: "4 hours ago",
-          content: "That would be great! Looking forward to it.",
-          avatar: "https://via.placeholder.com/24x24?text=ED"
-        }
-      ]
-    }
-  ]);
+  const [comments, setComments] = useState([]);
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
 
-  const handleLike = () => {
-    // สมมติว่าผู้ใช้ยังไม่ได้ login - แสดง login modal
-    setShowLoginModal(true);
+  // Helper function to load comments with ratings
+  const loadCommentsWithRatings = useCallback(async () => {
+    if (!postId) return;
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        users!inner(
+          id,
+          name,
+          profile_pic
+        )
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('Error loading comments:', error);
+      return;
+    }
+
+    // Build one-level threaded structure (parent -> replies)
+    const byId = new Map();
+    (data || []).forEach((c) => {
+      byId.set(c.id, {
+        id: c.id,
+        user_id: c.user_id,
+        author: c.users?.name || 'User',
+        date: new Date(c.created_at).toLocaleString(),
+        content: c.comment_text,
+        avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
+        replies: [],
+        parent_id: c.parent_id,
+        rating: null,
+      });
+    });
+
+    const roots = [];
+    byId.forEach((c) => {
+      if (c.parent_id) {
+        const parent = byId.get(c.parent_id);
+        if (parent) parent.replies.push(c);
+      } else {
+        roots.push(c);
+      }
+    });
+    
+    // Fetch ratings for these users for this post
+    const uniqueUserIds = [...new Set((data || []).map((c) => c.user_id).filter(Boolean))];
+    if (uniqueUserIds.length > 0) {
+      const { data: ratings } = await supabase
+        .from('post_ratings')
+        .select('user_id,rating')
+        .eq('post_id', postId)
+        .in('user_id', uniqueUserIds);
+      (ratings || []).forEach((r) => {
+        // assign rating to both root and replies in byId
+        byId.forEach((val) => {
+          if (val.user_id === r.user_id) val.rating = r.rating;
+        });
+      });
+    }
+
+    setComments(roots);
+  }, [postId]);
+
+  // Load comments from database (Supabase)
+  useEffect(() => {
+    loadCommentsWithRatings();
+  }, [loadCommentsWithRatings]);
+
+  // Load likes data: likes_count and per-user isLiked (server check)
+  useEffect(() => {
+    const loadLikesData = async () => {
+      if (!postId) return;
+      
+      try {
+        // Get likes count from post
+        const { data: post, error: postError } = await supabase
+          .from('posts')
+          .select('likes_count')
+          .eq('id', postId)
+          .single();
+        
+        if (!postError && post) {
+          setLikes(post.likes_count || 0);
+        }
+        // Check isLiked from server when authenticated
+        if (isAuthenticated && state.user?.id) {
+          try {
+            const res = await axios.get(`${apiBase}/posts/${postId}/likes/check`, {
+              params: { user_id: state.user.id }
+            });
+            setIsLiked(Boolean(res?.data?.isLiked));
+          } catch (_) {
+            setIsLiked(false);
+          }
+        } else {
+          setIsLiked(false);
+        }
+      } catch (error) {
+        console.error('Error loading likes:', error);
+      }
+    };
+    
+    loadLikesData();
+  }, [postId, isAuthenticated, state.user?.id, apiBase]);
+
+  const handleLike = async () => {
+    // Check authentication first
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        // Unlike
+        await axios.delete(`${apiBase}/posts/${postId}/likes`, { data: { user_id: state.user.id } });
+        setLikes(prev => Math.max(prev - 1, 0));
+        setIsLiked(false);
+      } else {
+        // Like
+        await axios.post(`${apiBase}/posts/${postId}/likes`, { user_id: state.user.id });
+        setLikes(prev => prev + 1);
+        setIsLiked(true);
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Optionally show error message to user
+    }
   };
 
   const handleCopyLink = async () => {
@@ -216,47 +321,91 @@ function Comment({ postId }) {
         return;
     }
     
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    // Open in popup window with proper security settings
+    const width = 600;
+    const height = 500;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    
+    window.open(
+      shareUrl, 
+      '_blank', 
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,noopener,noreferrer`
+    );
+  };
+
+  const refreshComments = async () => {
+    await loadCommentsWithRatings();
+  };
+
+  const handleDelete = async (commentId, isReply) => {
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
+    // Delete target comment; if root, also delete its replies (one-level)
+    if (!isReply) {
+      await supabase.from('comments').delete().eq('parent_id', commentId);
+    }
+    await supabase.from('comments').delete().eq('id', commentId).eq('user_id', state.user.id);
+    await refreshComments();
   };
 
   const handleSubmitComment = async () => {
     if (!comment.trim()) return;
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
 
-    // สมมติว่าผู้ใช้ยังไม่ได้ login - แสดง login modal
-    setShowLoginModal(true);
+    try {
+      setIsSubmitting(true);
+      const { error } = await supabase.from('comments').insert({
+        post_id: postId,
+        user_id: state.user.id,
+        comment_text: comment,
+        parent_id: null,
+      });
+      if (error) throw error;
+      setComment('');
+      // Reload with ratings
+      await loadCommentsWithRatings();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleReply = (commentId, replyText) => {
-    const reply = {
-      id: Date.now(),
-      author: "You",
-      date: "Just now",
-      content: replyText,
-      avatar: "https://via.placeholder.com/24x24?text=Y"
-    };
-
-    setComments(prev => 
-      prev.map(comment => 
-        comment.id === commentId 
-          ? { ...comment, replies: [...comment.replies, reply] }
-          : comment
-      )
-    );
+  const handleReply = async (commentId, replyText) => {
+    if (!replyText.trim()) return;
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
+    const { error } = await supabase.from('comments').insert({
+      post_id: postId,
+      user_id: state.user.id,
+      comment_text: replyText,
+      parent_id: commentId,
+    });
+    if (!error) {
+      // Reload with ratings
+      await loadCommentsWithRatings();
+    }
   };
 
   return (
     <>
     <div>
       {/* Reaction and Share Row */}
-      <div className="bg-neutral-200 sm:rounded-3xl p-4 gap-4 flex flex-col sm:flex-row items-center justify-between mb-6">
+      <div className="bg-stone-200 sm:rounded-3xl p-4 gap-4 flex flex-col sm:flex-row items-center justify-between mb-6">
         <div className="flex items-center gap-4 w-full">
           {/* Like Button */}
           <button
             onClick={handleLike}
-            className={`flex items-center justify-center w-full sm:w-auto gap-2 px-4 py-2 rounded-full border transition-colors ${
+            className={`flex items-center justify-center w-full sm:w-auto gap-2 px-4 py-2 rounded-full border transition-colors cursor-pointer ${
               isLiked 
                 ? 'bg-red-50 border-red-200 text-red-600' 
-                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
             }`}
           >
             <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -265,39 +414,41 @@ function Comment({ postId }) {
         </div>
 
         {/* Social Share Buttons */}
-        <div className="flex items-center justify-center sm:justify-end gap-2 w-full">
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
           {/* Copy Link Button */}
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
           >
             <Copy className="w-4 h-4" />
-            <span className="text-sm font-medium hidden sm:flex">Copy link</span>
+            <span className="text-sm font-medium flex">Copy link</span>
           </button>
+          <div className="flex flex-row gap-2">
           <button
             onClick={() => handleShare('facebook')}
-            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors"
+            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer"
           >
             <Facebook className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={() => handleShare('linkedin')}
-            className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition-colors"
+            className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition-colors cursor-pointer"
           >
             <Linkedin className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={() => handleShare('twitter')}
-            className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center hover:bg-blue-500 transition-colors"
+            className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center hover:bg-blue-500 transition-colors cursor-pointer"
           >
             <Twitter className="w-4 h-4 text-white" />
           </button>
+          </div>
         </div>
       </div>
 
       {/* Comment Input Section */}
-      <div className="mb-8 px-4">
-        <label className="block text-sm font-medium text-gray-900 mb-3">
+      <div className="mb-8 max-md:px-4">
+        <label className="block text-sm font-medium text-stone-900 mb-3">
           Comment
         </label>
         <div className="relative">
@@ -305,17 +456,17 @@ function Comment({ postId }) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="What are your thoughts?"
-            className="w-full bg-white p-4 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full bg-white p-4 border border-stone-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows="4"
           />
           <div className="absolute bottom-3 right-3">
             <button
               onClick={handleSubmitComment}
               disabled={!comment.trim() || isSubmitting}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 !comment.trim() || isSubmitting
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-800 text-white hover:bg-gray-900'
+                  ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                  : 'bg-stone-800 text-white hover:bg-stone-900'
               }`}
             >
               {isSubmitting ? 'Sending...' : 'Send'}
@@ -325,13 +476,15 @@ function Comment({ postId }) {
       </div>
 
       {/* Comments List */}
-      <div className="space-y-6 bg-white p-4">
+      <div className="space-y-6 max-md:px-4">
         {comments.map((commentItem) => (
           <CommentItem
             key={commentItem.id}
             comment={commentItem}
             replies={commentItem.replies}
             onReply={handleReply}
+            onDelete={handleDelete}
+            currentUserId={state.user?.id}
           />
         ))}
       </div>

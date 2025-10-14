@@ -17,21 +17,23 @@ const NavBar = () => {
   NavBar.displayName = "NavBar";
 
   return (
-    <nav className="flex flex-row justify-between items-center px-6 py-4 bg-neutral-50 border-b border-neutral-200">
+    <nav className="flex flex-row justify-between items-center px-6 py-4 bg-stone-50 border-b border-stone-200">
       {/* Logo */}
-      <img src="Plotline_text.svg" alt="Plotline logo" className="w-25 h-25 mx-10 -my-25"/>
+      <Link to="/">
+        <img src="/Plotline_text.svg" alt="Plotline logo" className="w-25 h-25 mx-5 md:mx-10 -my-5"/>
+      </Link>
 
       {/* Desktop Buttons */}
       <div className="flex items-center space-x-[8px] max-sm:hidden">
         {isAuthenticated ? (
           // Authenticated state
           <div className="flex items-center space-x-4">
-            <span className="text-neutral-800 font-medium">
+            <span className="text-stone-800 font-medium">
               {user?.username || user?.name || 'User'}
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-1.5 bg-neutral-900 text-white rounded-full text-sm hover:bg-neutral-800 transition-colors">
+                <button className="px-4 py-1.5 bg-stone-900 text-white rounded-full text-sm hover:bg-stone-800 transition-colors">
                   Menu
                 </button>
               </DropdownMenuTrigger>
@@ -58,13 +60,13 @@ const NavBar = () => {
           <>
             <Link 
               to="/login"
-              className="px-4 py-1.5 border border-neutral-800 text-neutral-800 rounded-full text-sm hover:bg-neutral-100 transition-colors"
+              className="px-4 py-1.5 border border-stone-800 text-stone-800 rounded-full text-sm hover:bg-stone-100 transition-colors"
             >
               Log in
             </Link>
             <Link 
               to="/signup"
-              className="px-4 py-1.5 bg-neutral-900 text-white rounded-full text-sm hover:bg-neutral-800 transition-colors"
+              className="px-4 py-1.5 bg-stone-900 text-white rounded-full text-sm hover:bg-stone-800 transition-colors"
             >
               Sign up
             </Link>
@@ -86,7 +88,7 @@ const NavBar = () => {
                   <DropdownMenuItem className="hover:bg-transparent p-0">
                     <Link 
                       to="/profile"
-                      className="w-full px-4 py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm hover:bg-neutral-100 transition-colors block text-center"
+                      className="w-full px-4 py-3 border border-stone-800 text-stone-800 rounded-full text-sm hover:bg-stone-100 transition-colors block text-center"
                     >
                       Profile
                     </Link>
@@ -95,7 +97,7 @@ const NavBar = () => {
                     <DropdownMenuItem className="hover:bg-transparent p-0">
                       <Link 
                         to="/admin"
-                        className="w-full px-4 py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm hover:bg-neutral-100 transition-colors block text-center"
+                        className="w-full px-4 py-3 border border-stone-800 text-stone-800 rounded-full text-sm hover:bg-stone-100 transition-colors block text-center"
                       >
                         Admin Panel
                       </Link>
@@ -116,7 +118,7 @@ const NavBar = () => {
                   <DropdownMenuItem className="hover:bg-transparent p-0">
                     <Link 
                       to="/login"
-                      className="w-full px-4 py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm hover:bg-neutral-100 transition-colors block text-center"
+                      className="w-full px-4 py-3 border border-stone-800 text-stone-800 rounded-full text-sm hover:bg-stone-100 transition-colors block text-center"
                     >
                       Log in
                     </Link>
@@ -124,7 +126,7 @@ const NavBar = () => {
                   <DropdownMenuItem className="hover:bg-transparent p-0">
                     <Link 
                       to="/signup"
-                      className="w-full px-4 py-3 bg-neutral-900 text-white rounded-full text-sm hover:bg-neutral-800 transition-colors block text-center"
+                      className="w-full px-4 py-3 bg-stone-900 text-white rounded-full text-sm hover:bg-stone-800 transition-colors block text-center"
                     >
                       Sign up
                     </Link>

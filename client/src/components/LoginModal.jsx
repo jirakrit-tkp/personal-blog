@@ -9,22 +9,22 @@ function LoginModal({ isOpen, onClose }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className="absolute top-4 right-4 text-stone-500 hover:text-stone-700"
         >
           <X className="w-6 h-6" />
         </button>
 
         {/* Modal Content */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <h2 className="text-2xl font-bold text-stone-900 mb-6">
             Create an account to continue
           </h2>
           
-          <button className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors mb-4">
+          <button className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors mb-4">
             Create account
           </button>
           
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-stone-600">
             Already have an account?{' '}
             <button className="text-blue-600 hover:text-blue-800 font-medium">
               Log in
