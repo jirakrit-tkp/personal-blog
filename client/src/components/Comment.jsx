@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Heart, Copy, Facebook, Linkedin, Twitter, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Copy, Facebook, Linkedin, Twitter, X, Trash } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/authentication.jsx';
 import LoginModal from './LoginModal';
 
 // Individual Comment Component
-function CommentItem({ comment, replies = [], onReply }) {
-  const [showReplyForm, setShowReplyForm] = useState(false);
+function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }) {
   const [replyText, setReplyText] = useState('');
 
   const handleReply = () => {
     if (replyText.trim()) {
       onReply(comment.id, replyText);
       setReplyText('');
-      setShowReplyForm(false);
     }
   };
 
@@ -26,51 +27,24 @@ function CommentItem({ comment, replies = [], onReply }) {
         />
         <div className="flex-1">
           <h4 className="font-semibold text-stone-900 text-sm">{comment.author}</h4>
-          <p className="text-xs text-stone-500">{comment.created_at || comment.date}</p>
+          <p className="text-xs text-stone-400">{comment.created_at || comment.date}</p>
         </div>
+        {currentUserId && comment.user_id === currentUserId && (
+          <button
+            onClick={() => onDelete(comment.id, Boolean(comment.parent_id))}
+            className="p-1 text-stone-500 hover:text-stone-700"
+            aria-label="Delete comment"
+          >
+            <Trash className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Comment Content */}
       <div className="ml-11">
-        <p className="text-stone-700 text-sm leading-relaxed mb-3">{comment.content}</p>
+        <p className="text-stone-700 text-base leading-relaxed mb-2">{comment.content}</p>
         
-        {/* Reply Button */}
-        <button 
-          onClick={() => setShowReplyForm(!showReplyForm)}
-          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-        >
-          Reply
-        </button>
-
-        {/* Reply Form */}
-        {showReplyForm && (
-          <div className="mt-3 p-3 bg-stone-50 rounded-lg">
-            <textarea
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder="Write a reply..."
-              className="w-full p-2 border border-stone-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows="3"
-            />
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={handleReply}
-                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-              >
-                Reply
-              </button>
-              <button
-                onClick={() => {
-                  setShowReplyForm(false);
-                  setReplyText('');
-                }}
-                className="px-3 py-1 bg-stone-300 text-stone-700 text-xs rounded hover:bg-stone-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Reply Inline Input moved to bottom (rendered after replies) */}
 
         {/* Replies */}
         {replies.length > 0 && (
@@ -84,13 +58,44 @@ function CommentItem({ comment, replies = [], onReply }) {
                     alt={reply.author}
                   />
                   <h5 className="font-medium text-stone-900 text-xs">{reply.author}</h5>
-                  <p className="text-xs text-stone-500">{reply.created_at || reply.date}</p>
+                  <p className="text-xs text-stone-400">{reply.created_at || reply.date}</p>
+                  {currentUserId && reply.user_id === currentUserId && (
+                    <button
+                      onClick={() => onDelete(reply.id, true)}
+                      className="ml-auto p-1 text-stone-500 hover:text-stone-700"
+                      aria-label="Delete reply"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                <p className="text-stone-700 text-xs leading-relaxed">{reply.content}</p>
+                <p className="text-stone-700 text-sm leading-relaxed">{reply.content}</p>
               </div>
             ))}
           </div>
         )}
+
+        {/* Reply Input at the bottom */}
+        <div className="mt-3">
+          <div className="w-full max-w-md flex items-center gap-2">
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onInput={(e) => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply(); } }}
+              placeholder="Write a reply..."
+              rows="1"
+              className="w-full pl-3 pr-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white text-stone-900 resize-none no-scrollbar"
+            />
+            <button
+              onClick={handleReply}
+              disabled={!replyText.trim()}
+              className={`${!replyText.trim() ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-stone-800 text-white hover:bg-stone-900'} h-9 px-4 text-xs rounded-full font-medium`}
+            >
+              Reply
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -126,61 +131,66 @@ function Toast({ message, onClose }) {
 
 // Main Comment Component with all functionality
 function Comment({ postId }) {
+  const navigate = useNavigate();
+  const { isAuthenticated, state } = useAuth();
   const [likes, setLikes] = useState(321);
   const [isLiked, setIsLiked] = useState(false);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: "Sarah Johnson",
-      date: "2 hours ago",
-      content: "Great article! I've been looking for information about this topic for a while. Thanks for sharing your insights.",
-      avatar: "https://via.placeholder.com/32x32?text=SJ",
-      replies: [
-        {
-          id: 11,
-          author: "Author",
-          date: "1 hour ago",
-          content: "Thank you Sarah! I'm glad you found it helpful.",
-          avatar: "https://via.placeholder.com/24x24?text=A"
+  const [comments, setComments] = useState([]);
+
+  // Load comments from database (Supabase)
+  useEffect(() => {
+    const loadComments = async () => {
+      if (!postId) return;
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          users!inner(
+            id,
+            name,
+            profile_pic
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      if (error) {
+        console.error('Error loading comments:', error);
+        return;
+      }
+
+      // Build one-level threaded structure (parent -> replies)
+      const byId = new Map();
+      (data || []).forEach((c) => {
+        byId.set(c.id, {
+          id: c.id,
+          user_id: c.user_id,
+          author: c.users?.name || 'User',
+          date: new Date(c.created_at).toLocaleString(),
+          content: c.comment_text,
+          avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
+          replies: [],
+          parent_id: c.parent_id,
+        });
+      });
+
+      const roots = [];
+      byId.forEach((c) => {
+        if (c.parent_id) {
+          const parent = byId.get(c.parent_id);
+          if (parent) parent.replies.push(c);
+        } else {
+          roots.push(c);
         }
-      ]
-    },
-    {
-      id: 2,
-      author: "Mike Chen",
-      date: "4 hours ago",
-      content: "This is exactly what I needed to know. The examples you provided really helped me understand the concept better.",
-      avatar: "https://via.placeholder.com/32x32?text=MC",
-      replies: []
-    },
-    {
-      id: 3,
-      author: "Emily Davis",
-      date: "6 hours ago",
-      content: "I have a question about the implementation. Could you provide more details about the configuration?",
-      avatar: "https://via.placeholder.com/32x32?text=ED",
-      replies: [
-        {
-          id: 31,
-          author: "Author",
-          date: "5 hours ago",
-          content: "Sure Emily! I'll add a detailed configuration section in my next post.",
-          avatar: "https://via.placeholder.com/24x24?text=A"
-        },
-        {
-          id: 32,
-          author: "Emily Davis",
-          date: "4 hours ago",
-          content: "That would be great! Looking forward to it.",
-          avatar: "https://via.placeholder.com/24x24?text=ED"
-        }
-      ]
-    }
-  ]);
+      });
+      setComments(roots);
+    };
+
+    loadComments();
+  }, [postId]);
 
   const handleLike = () => {
     // สมมติว่าผู้ใช้ยังไม่ได้ login - แสดง login modal
@@ -219,29 +229,166 @@ function Comment({ postId }) {
     window.open(shareUrl, '_blank', 'width=600,height=400');
   };
 
-  const handleSubmitComment = async () => {
-    if (!comment.trim()) return;
-
-    // สมมติว่าผู้ใช้ยังไม่ได้ login - แสดง login modal
-    setShowLoginModal(true);
+  const refreshComments = async () => {
+    const { data } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        users!inner(
+          id,
+          name,
+          profile_pic
+        )
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    const byId = new Map();
+    (data || []).forEach((c) => {
+      byId.set(c.id, {
+        id: c.id,
+        user_id: c.user_id,
+        author: c.users?.name || 'User',
+        date: new Date(c.created_at).toLocaleString(),
+        content: c.comment_text,
+        avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
+        replies: [],
+        parent_id: c.parent_id,
+      });
+    });
+    const roots = [];
+    byId.forEach((c) => {
+      if (c.parent_id) {
+        const parent = byId.get(c.parent_id);
+        if (parent) parent.replies.push(c);
+      } else {
+        roots.push(c);
+      }
+    });
+    setComments(roots);
   };
 
-  const handleReply = (commentId, replyText) => {
-    const reply = {
-      id: Date.now(),
-      author: "You",
-      date: "Just now",
-      content: replyText,
-      avatar: "https://via.placeholder.com/24x24?text=Y"
-    };
+  const handleDelete = async (commentId, isReply) => {
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
+    // Delete target comment; if root, also delete its replies (one-level)
+    if (!isReply) {
+      await supabase.from('comments').delete().eq('parent_id', commentId);
+    }
+    await supabase.from('comments').delete().eq('id', commentId).eq('user_id', state.user.id);
+    await refreshComments();
+  };
 
-    setComments(prev => 
-      prev.map(comment => 
-        comment.id === commentId 
-          ? { ...comment, replies: [...comment.replies, reply] }
-          : comment
-      )
-    );
+  const handleSubmitComment = async () => {
+    if (!comment.trim()) return;
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const { error } = await supabase.from('comments').insert({
+        post_id: postId,
+        user_id: state.user.id,
+        comment_text: comment,
+        parent_id: null,
+      });
+      if (error) throw error;
+      setComment('');
+      // Reload
+      const { data } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          users!inner(
+            id,
+            name,
+            profile_pic
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      // Rebuild
+      const byId = new Map();
+      (data || []).forEach((c) => {
+        byId.set(c.id, {
+          id: c.id,
+          user_id: c.user_id,
+          author: c.users?.name || 'User',
+          date: new Date(c.created_at).toLocaleString(),
+          content: c.comment_text,
+          avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
+          replies: [],
+          parent_id: c.parent_id,
+        });
+      });
+      const roots = [];
+      byId.forEach((c) => {
+        if (c.parent_id) {
+          const parent = byId.get(c.parent_id);
+          if (parent) parent.replies.push(c);
+        } else {
+          roots.push(c);
+        }
+      });
+      setComments(roots);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReply = async (commentId, replyText) => {
+    if (!replyText.trim()) return;
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
+    const { error } = await supabase.from('comments').insert({
+      post_id: postId,
+      user_id: state.user.id,
+      comment_text: replyText,
+      parent_id: commentId,
+    });
+    if (!error) {
+      // simple reload
+      const { data } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          users!inner(
+            id,
+            name,
+            profile_pic
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      const byId = new Map();
+      (data || []).forEach((c) => {
+        byId.set(c.id, {
+          id: c.id,
+          user_id: c.user_id,
+          author: c.users?.name || 'User',
+          date: new Date(c.created_at).toLocaleString(),
+          content: c.comment_text,
+          avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
+          replies: [],
+          parent_id: c.parent_id,
+        });
+      });
+      const roots = [];
+      byId.forEach((c) => {
+        if (c.parent_id) {
+          const parent = byId.get(c.parent_id);
+          if (parent) parent.replies.push(c);
+        } else {
+          roots.push(c);
+        }
+      });
+      setComments(roots);
+    }
   };
 
   return (
@@ -334,6 +481,8 @@ function Comment({ postId }) {
             comment={commentItem}
             replies={commentItem.replies}
             onReply={handleReply}
+            onDelete={handleDelete}
+            currentUserId={state.user?.id}
           />
         ))}
       </div>
