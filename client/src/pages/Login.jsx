@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { NavBar, Footer } from '../components/websection';
 import { useAuth } from '../context/authentication.jsx';
 
 function Login() {
   const { login, state } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -51,7 +52,7 @@ function Login() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      const result = await login(formData);
+      const result = await login(formData, navigate);
       if (result?.error) {
         setErrors({ general: result.error });
       }
@@ -59,15 +60,15 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen bg-stone-50 flex flex-col">
       <NavBar />
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           {/* Login Form */}
-          <div className="bg-neutral-200 rounded-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Log in</h1>
+          <div className="bg-stone-200 rounded-lg p-8">
+            <h1 className="text-3xl font-bold text-stone-900 mb-8">Log in</h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* General Error */}
@@ -79,7 +80,7 @@ function Login() {
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className={`block text-sm font-medium mb-2 ${errors.email ? 'text-red-600' : 'text-gray-700'}`}>
+                <label htmlFor="email" className={`block text-sm font-medium mb-2 ${errors.email ? 'text-red-600' : 'text-stone-700'}`}>
                   Email
                 </label>
                 <input
@@ -92,7 +93,7 @@ function Login() {
                   className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.email 
                       ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
+                      : 'border-stone-300 focus:ring-blue-500'
                   }`}
                 />
                 {errors.email && (
@@ -102,7 +103,7 @@ function Login() {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className={`block text-sm font-medium mb-2 ${errors.password ? 'text-red-600' : 'text-gray-700'}`}>
+                <label htmlFor="password" className={`block text-sm font-medium mb-2 ${errors.password ? 'text-red-600' : 'text-stone-700'}`}>
                   Password
                 </label>
                 <input
@@ -115,7 +116,7 @@ function Login() {
                   className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.password 
                       ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
+                      : 'border-stone-300 focus:ring-blue-500'
                   }`}
                 />
                 {errors.password && (
@@ -127,16 +128,16 @@ function Login() {
               <button
                 type="submit"
                 disabled={state.loading}
-                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {state.loading ? 'Logging in...' : 'Log in'}
               </button>
             </form>
 
             {/* Sign Up Link */}
-            <p className="text-center mt-6 text-gray-600">
-              Don't have any account?{' '}
-              <Link to="/signup" className="text-gray-900 hover:underline font-medium">
+            <p className="text-center mt-6 text-stone-600">
+              {"Don't have any account?"}{' '}
+              <Link to="/signup" className="text-stone-900 hover:underline font-medium">
                 Sign up
               </Link>
             </p>

@@ -111,9 +111,9 @@ const AdminSidebar = () => {
   return (
     <aside className="w-70 h-screen bg-stone-200 py-6 flex flex-col fixed left-0 top-0 z-10">
       {/* Brand Header */}
-      <div className="px-6 pb-8 border-b border-gray-200 mb-6">
+      <div className="px-6 pb-8 border-b border-stone-200 mb-6">
         <div className="flex items-center mb-2">
-          <img src="../Plotline_text.svg" alt="Plotline logo" className="w-40 h-40 -mb-15"/>
+          <img src="/Plotline_text.svg" alt="Plotline logo" className="w-40 h-40 -mb-15"/>
         </div>
         <div className="text-orange-300 text-xl font-semibold">Admin panel</div>
       </div>
@@ -143,7 +143,7 @@ const AdminSidebar = () => {
       </nav>
 
       {/* Utility Links */}
-      <div className="px-4 border-t border-gray-200 pt-4">
+      <div className="px-4 border-t border-stone-200 pt-4">
         <ul className="space-y-1">
           {utilityItems.map((item) => (
             <li key={item.id}>

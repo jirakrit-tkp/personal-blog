@@ -1,3 +1,6 @@
+/* Hide scrollbar for horizontal scrollers where desired */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 @import "tailwindcss";
 @import "tw-animate-css";
 

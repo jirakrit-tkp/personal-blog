@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/authentication.jsx';
 import axios from 'axios';
+import { AdminNavbar } from '../../components/admin';
+import FormInput from '../../components/ui/FormInput';
+import FormTextarea from '../../components/ui/FormTextarea';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import Snackbar from '../../components/ui/Snackbar';
 
 const AdminProfile = () => {
   const { state, fetchUser } = useAuth();
@@ -10,6 +15,8 @@ const AdminProfile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
+  const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -23,6 +30,14 @@ const AdminProfile = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -38,6 +53,31 @@ const AdminProfile = () => {
   };
 
   const handleSave = async () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    }
+    
+    if (!formData.username.trim()) {
+      errors.username = 'Username is required';
+    }
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setSnackbar({
+        isOpen: true,
+        message: 'Please fill in all required fields',
+        type: 'error'
+      });
+      return;
+    }
+    
     setIsSaving(true);
     const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
 
@@ -59,7 +99,11 @@ const AdminProfile = () => {
       });
 
       if (response.data.success) {
-        alert('Profile updated successfully!');
+        setSnackbar({
+          isOpen: true,
+          message: 'Profile updated successfully!',
+          type: 'success'
+        });
         await fetchUser(); // Refresh user data
         setSelectedFile(null);
         setPreviewUrl(null);
@@ -67,7 +111,11 @@ const AdminProfile = () => {
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to update profile: ' + (error.response?.data?.error || error.message));
+      setSnackbar({
+        isOpen: true,
+        message: 'Failed to update profile: ' + (error.response?.data?.error || error.message),
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -78,54 +126,55 @@ const AdminProfile = () => {
       name: user?.name || '',
       email: user?.email || '',
       username: user?.username || '',
-      bio: 'I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness. When I\'m not writing, I spend time volunteering at my local animal shelter, helping cats find loving homes.'
+      bio: user?.bio || ''
     });
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsEditing(false);
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, isOpen: false }));
+  };
+
   AdminProfile.displayName = "AdminProfile";
 
   return (
     <div className="bg-stone-100 min-h-screen">
-      {/* Page Header */}
-      <div className="bg-stone-100 px-8 py-6 border-b-2 border-stone-300">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <div className="flex gap-3">
-            {!isEditing ? (
+      <AdminNavbar 
+        title="Profile"
+        actions={
+          !isEditing ? (
+            <button 
+              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <>
               <button 
-                className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
-                onClick={() => setIsEditing(true)}
+                className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors"
+                onClick={handleCancel}
               >
-                Edit Profile
+                Cancel
               </button>
-            ) : (
-              <>
-                <button 
-                  className="px-6 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+              <button 
+                className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+            </>
+          )
+        }
+      />
 
       <div className="mx-8 p-8 min-h-[calc(100vh-120px)]">
         {/* Profile Picture Section */}
         <div className="flex items-center gap-6 mb-8">
-          <div className="w-22 h-22 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="w-22 h-22 bg-stone-200 rounded-full flex items-center justify-center overflow-hidden">
             <img 
               src={previewUrl || user?.profilePic || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"} 
               alt="Profile"
@@ -149,7 +198,7 @@ const AdminProfile = () => {
                   {selectedFile ? 'Change Picture' : 'Upload profile picture'}
                 </label>
                 {selectedFile && (
-                  <span className="ml-3 text-sm text-gray-600">{selectedFile.name}</span>
+                  <span className="ml-3 text-sm text-stone-600">{selectedFile.name}</span>
                 )}
               </>
             ) : (
@@ -166,103 +215,69 @@ const AdminProfile = () => {
         {/* Form Fields */}
         <div className="space-y-6">
           {/* Name Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Enter your name"
-              />
-            ) : (
-              <input
-                type="text"
-                value={user?.name || 'Not set'}
-                readOnly
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              />
-            )}
-          </div>
+          <FormInput
+            label="Name"
+            type="text"
+            name="name"
+            value={isEditing ? formData.name : (user?.name || 'Not set')}
+            onChange={handleInputChange}
+            placeholder="Enter your name"
+            readOnly={!isEditing}
+            className="w-1/2"
+            hasError={!!validationErrors.name}
+          />
 
           {/* Username Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Enter your username"
-              />
-            ) : (
-              <input
-                type="text"
-                value={user?.username || 'Not set'}
-                readOnly
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              />
-            )}
-          </div>
+          <FormInput
+            label="Username"
+            type="text"
+            name="username"
+            value={isEditing ? formData.username : (user?.username || 'Not set')}
+            onChange={handleInputChange}
+            placeholder="Enter your username"
+            readOnly={!isEditing}
+            className="w-1/2"
+            hasError={!!validationErrors.username}
+          />
 
           {/* Email Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            {isEditing ? (
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Enter your email"
-              />
-            ) : (
-              <input
-                type="email"
-                value={user?.email || 'Not set'}
-                readOnly
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400"
-              />
-            )}
-          </div>
+          <FormInput
+            label="Email"
+            type="email"
+            name="email"
+            value={isEditing ? formData.email : (user?.email || 'Not set')}
+            onChange={handleInputChange}
+            placeholder="Enter your email"
+            readOnly={!isEditing}
+            className="w-1/2"
+            hasError={!!validationErrors.email}
+          />
 
           {/* Bio Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bio (max 500 letters)
-            </label>
-                {isEditing ? (
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    rows={4}
-                    maxLength={500}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors resize-none"
-                    placeholder="Enter your bio"
-                  />
-                ) : (
-                  <textarea
-                    value={user?.bio || ''}
-                    readOnly
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white/50 text-stone-400 resize-none"
-                  />
-                )}
-          </div>
+          <FormTextarea
+            label="Bio (max 500 letters)"
+            name="bio"
+            value={isEditing ? formData.bio : (user?.bio || '')}
+            onChange={handleInputChange}
+            placeholder="Enter your bio"
+            readOnly={!isEditing}
+            rows={4}
+            maxLength={500}
+            showCharCount={true}
+            showMarkdownToolbar={true}
+            className="w-full"
+          />
         </div>
       </div>
+
+
+      {/* Snackbar */}
+      <Snackbar
+        isOpen={snackbar.isOpen}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
+        type={snackbar.type}
+      />
     </div>
   );
 };

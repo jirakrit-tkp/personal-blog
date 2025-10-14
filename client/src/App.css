@@ -4,3 +4,12 @@
   margin: 0 auto;
   padding: 0 auto;
 }
+
+/* Hide scrollbar cross-browser */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

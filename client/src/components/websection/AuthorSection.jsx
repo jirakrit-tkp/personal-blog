@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getMarkdownHTML } from '../../lib/markdownUtils';
 
 const AuthorSection = () => {
   const [publicAdmin, setPublicAdmin] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -10,13 +12,15 @@ const AuthorSection = () => {
       try {
         const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
         const adminId = import.meta.env.VITE_PUBLIC_ADMIN_ID; // UUID of admin user
-        if (!adminId) return;
+        if (!adminId) { setLoading(false); return; }
         const res = await axios.get(`${apiBase}/profiles/${adminId}`, { signal: controller.signal });
         if (res?.data?.success) {
           setPublicAdmin(res.data.data);
         }
       } catch (err) {
         // silent fail; will fallback to defaults
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -26,38 +30,73 @@ const AuthorSection = () => {
   AuthorSection.displayName = "AuthorSection";
 
   return (
-    <section className="bg-neutral-50 py-16 px-8">
+    <section className="bg-stone-50 py-16 px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 justify-center items-center">
-        {/* Left Section - Text Content */}
-        <div className="flex flex-col space-y-6 items-center lg:items-end flex-1 text-center lg:text-end">
-          <h1 className="text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight">
-            Every Story<br/>
-            Leaves a Trace
-          </h1>
-          <p className="text-lg text-neutral-700 leading-relaxed whitespace-pre-line">
-            {'Discover honest thoughts, weird feelings, and random rants about stories that hit too hard.\nYou\'re now in Plotlines — my corner for every scene that stuck in my head.'}
-          </p>
-        </div>
+        {loading || !publicAdmin ? (
+          <>
+            {/* Left skeleton (match article style) */}
+            <div className="flex flex-col space-y-6 items-center lg:items-end flex-1 text-center lg:text-end w-full animate-pulse">
+              <div className="h-10 w-64 bg-stone-200 rounded" />
+              <div className="h-10 w-80 bg-stone-200 rounded" />
+              <div className="h-20 w-full max-w-md bg-stone-200 rounded" />
+            </div>
 
-        {/* Middle Section - Image */}
-        <div className="flex justify-center flex-1">
-          <div className="relative">
-            <img 
-              src={(publicAdmin?.profile_pic) || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"}
-              alt={(publicAdmin?.name) ? `${publicAdmin?.name} profile picture` : "Default profile picture"}
-              className="rounded-2xl shadow-lg w-full max-w-[300px] lg:w-[386px] h-auto lg:h-[529px] object-cover"
-            />
-          </div>
-        </div>
+            {/* Middle skeleton - blank card (no image while loading) */}
+            <div className="flex justify-center flex-1 w-full">
+              <div className="rounded-2xl bg-stone-200 w-full max-w-[300px] lg:w-[386px] h-[420px] lg:h-[529px] shadow-lg" aria-hidden="true" />
+            </div>
 
-        {/* Right Section - Author Bio */}
-        <div className="flex flex-col items-start space-y-4 flex-1 text-start">
-          <p className="text-sm text-neutral-500 font-medium">-Author</p>
-          <h2 className="text-2xl font-bold text-neutral-900">{publicAdmin?.name || 'Admin'}</h2>
-          <div className="space-y-3 text-neutral-700 leading-relaxed">
-            <p>{publicAdmin?.bio || ' '}</p>
-          </div>
-        </div>
+            {/* Right skeleton */}
+            <div className="flex flex-col items-start space-y-4 flex-1 text-start w-full animate-pulse">
+              <div className="h-4 w-20 bg-stone-200 rounded" />
+              <div className="h-6 w-40 bg-stone-200 rounded" />
+              <div className="space-y-3 w-full">
+                <div className="h-4 w-11/12 bg-stone-200 rounded" />
+                <div className="h-4 w-10/12 bg-stone-200 rounded" />
+                <div className="h-4 w-9/12 bg-stone-200 rounded" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Left Section - Text Content */}
+            <div className="flex flex-col space-y-6 items-center lg:items-end flex-1 text-center lg:text-end">
+              <h1 className="text-4xl lg:text-5xl font-bold text-stone-900 leading-tight">
+                Every Story<br/>
+                Leaves a Trace
+              </h1>
+              <p className="text-lg text-stone-700 leading-relaxed whitespace-pre-line">
+                {'Discover honest thoughts, weird feelings, and random rants about stories that hit too hard.\nYou\'re now in Plotlines — my corner for every scene that stuck in my head.'}
+              </p>
+            </div>
+
+            {/* Middle Section - Image */}
+            <div className="flex justify-center flex-1">
+              <div className="relative">
+                {publicAdmin?.profile_pic ? (
+                  <img 
+                    src={publicAdmin.profile_pic}
+                    alt={`${publicAdmin?.name || 'Author'} profile picture`}
+                    className="rounded-2xl shadow-lg w-full max-w-[300px] lg:w-[386px] h-auto lg:h-[529px] object-cover"
+                  />
+                ) : (
+                  <div className="rounded-2xl bg-stone-200 w-full max-w-[300px] lg:w-[386px] h-[420px] lg:h-[529px] shadow-lg" aria-hidden="true" />
+                )}
+              </div>
+            </div>
+
+            {/* Right Section - Author Bio */}
+            <div className="flex flex-col items-start space-y-4 flex-1 text-start">
+              <p className="text-sm text-stone-500 font-medium">-Author</p>
+              {publicAdmin?.name && (
+                <h2 className="text-2xl font-bold text-stone-900">{publicAdmin.name}</h2>
+              )}
+              <div className="space-y-3 text-stone-700 leading-relaxed">
+                <div dangerouslySetInnerHTML={getMarkdownHTML(publicAdmin?.bio || '')} />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

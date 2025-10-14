@@ -6,31 +6,49 @@ const router = express.Router();
 
 // POST create new post
 router.post("/", [validateCreatePostData], async (req, res) => {
-  const { title, image, category_id, description, content, status_id } = req.body;
-  
-  const newPost = {
-    title: title.trim(),
-    image: image.trim(), 
-    category_id: parseInt(category_id),
-    description: description.trim(), 
-    content: content.trim(), 
-    status_id: parseInt(status_id), 
-    date: new Date(), 
-    likes: 0
-  };
+  const { title, image, genre_ids, description, content, status_id, author_id } = req.body;
   
   try {
-    const { error } = await supabase.from('posts').insert({
-      title: newPost.title,
-      image: newPost.image,
-      category_id: newPost.category_id,
-      description: newPost.description,
-      content: newPost.content,
-      status_id: newPost.status_id,
-      date: newPost.date,
-      likes_count: newPost.likes
+    // Insert post first
+    const { data: postData, error: postError } = await supabase
+      .from('posts')
+      .insert({
+        title: title.trim(),
+        image: image.trim(),
+        description: description.trim(),
+        content: content.trim(),
+        status_id: parseInt(status_id),
+        author_id: author_id,
+        created_at: new Date(),
+        updated_at: new Date(),
+        likes_count: 0
+      })
+      .select('id')
+      .single();
+
+    if (postError) throw postError;
+
+    // Insert post_genres relationships
+    if (genre_ids && genre_ids.length > 0) {
+      const postGenres = genre_ids.map(genre_id => ({
+        post_id: postData.id,
+        genre_id: parseInt(genre_id),
+        created_at: new Date()
+      }));
+
+      const { error: genreError } = await supabase
+        .from('post_genres')
+        .insert(postGenres);
+
+      if (genreError) throw genreError;
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Created post successfully",
+      data: { id: postData.id, title: title.trim() }
     });
-    if (error) throw error;
+
   } catch (error) {
     console.error("Database error:", error);
     return res.status(500).json({
@@ -39,11 +57,6 @@ router.post("/", [validateCreatePostData], async (req, res) => {
       message: error.message
     });
   }
-  return res.status(201).json({
-    success: true,
-    message: "Created post successfully",
-    data: newPost
-  });
 });
 
 // GET single post by ID
@@ -51,11 +64,20 @@ router.get("/:id", [validatePostId], async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Get post with genres
+    // Get post with genres and author
     const { data: post, error } = await supabase
       .from('posts')
       .select(`
         *,
+        statuses(
+          id,
+          status
+        ),
+        users:author_id(
+          id,
+          name,
+          profile_pic
+        ),
         post_genres!inner(
           genres(
             id,
@@ -77,9 +99,13 @@ router.get("/:id", [validatePostId], async (req, res) => {
     // Transform genres data
     const transformedPost = {
       ...post,
-      genres: post.post_genres?.map(pg => pg.genres) || []
+      status: post.statuses?.status || 'Draft',
+      genres: post.post_genres?.map(pg => pg.genres) || [],
+      author: post.users ? { id: post.users.id, name: post.users.name, profile_pic: post.users.profile_pic } : null
     };
     delete transformedPost.post_genres;
+    delete transformedPost.statuses;
+    delete transformedPost.users;
     
     return res.status(200).json({
       success: true,
@@ -192,6 +218,15 @@ router.get("/", async (req, res) => {
       .from('posts')
       .select(`
         *,
+        statuses(
+          id,
+          status
+        ),
+        users:author_id(
+          id,
+          name,
+          profile_pic
+        ),
         post_genres(
           genres(
             id,
@@ -199,7 +234,7 @@ router.get("/", async (req, res) => {
           )
         )
       `, { count: 'exact' })
-      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
     if (keyword) query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%,content.ilike.%${keyword}%`);
@@ -210,8 +245,10 @@ router.get("/", async (req, res) => {
     // Transform posts data to include genres
     let transformedPosts = (data || []).map(post => ({
       ...post,
-      genres: post.post_genres?.map(pg => pg.genres) || []
-    })).map(({ post_genres, ...post }) => post);
+      status: post.statuses?.status || 'Draft',
+      genres: post.post_genres?.map(pg => pg.genres) || [],
+      author: post.users ? { id: post.users.id, name: post.users.name, profile_pic: post.users.profile_pic } : null
+    })).map(({ post_genres, statuses, users, ...post }) => post);
 
     // Handle category filtering by genre name after transformation
     if (category && category !== 'Highlight') {
@@ -239,6 +276,216 @@ router.get("/", async (req, res) => {
       error: "Server could not fetch posts because database connection failed",
       message: error.message
     });
+  }
+});
+
+// POST create rating for a post
+router.post("/:postId/ratings", async (req, res) => {
+  const { postId } = req.params;
+  const { rating, user_id } = req.body;
+  
+  try {
+    // Validate input
+    if (!rating || !user_id) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: rating and user_id"
+      });
+    }
+    
+    if (rating < 0 || rating > 10) {
+      return res.status(400).json({
+        success: false,
+        error: "Rating must be between 0 and 10"
+      });
+    }
+    
+    // Check if post exists
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('id', postId)
+      .single();
+    
+    if (postError || !post) {
+      return res.status(404).json({
+        success: false,
+        error: "Post not found"
+      });
+    }
+    
+    // Check if user exists
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user_id)
+      .single();
+    
+    if (userError || !user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+    
+    // Insert rating (UPSERT - update if exists, insert if not)
+    const { data: ratingData, error: ratingError } = await supabase
+      .from('post_ratings')
+      .upsert({
+        post_id: parseInt(postId),
+        user_id: user_id,
+        rating: parseFloat(rating)
+      }, {
+        onConflict: 'post_id,user_id'
+      })
+      .select('*');
+    
+    if (ratingError) {
+      console.error("Rating insert error:", ratingError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to save rating",
+        message: ratingError.message
+      });
+    }
+    
+    return res.status(201).json({
+      success: true,
+      message: "Rating saved successfully",
+      data: ratingData[0]
+    });
+    
+  } catch (error) {
+    console.error("Rating error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Server could not save rating",
+      message: error.message
+    });
+  }
+});
+
+// POST like a post (record per-user like)
+router.post("/:postId/likes", async (req, res) => {
+  const { postId } = req.params;
+  const { user_id } = req.body;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "Missing required field: user_id" });
+    }
+
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id, likes_count')
+      .eq('id', postId)
+      .single();
+
+    if (postError || !post) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+
+    // prevent duplicate
+    const { data: existing, error: checkErr } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    if (checkErr) {
+      return res.status(500).json({ success: false, error: "Failed to check like" });
+    }
+    if (existing) {
+      return res.status(400).json({ success: false, error: "Already liked" });
+    }
+
+    const { error: likeErr } = await supabase
+      .from('post_likes')
+      .insert({ post_id: parseInt(postId), user_id, created_at: new Date() });
+    if (likeErr) throw likeErr;
+
+    const nextCount = (post.likes_count || 0) + 1;
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ likes_count: nextCount, updated_at: new Date() })
+      .eq('id', postId);
+    if (updateError) throw updateError;
+
+    return res.status(201).json({ success: true, likes_count: nextCount });
+  } catch (error) {
+    console.error("Like error:", error);
+    return res.status(500).json({ success: false, error: "Server could not like post", message: error.message });
+  }
+});
+
+// DELETE unlike a post (remove per-user like)
+router.delete("/:postId/likes", async (req, res) => {
+  const { postId } = req.params;
+  const { user_id } = req.body;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "Missing required field: user_id" });
+    }
+
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id, likes_count')
+      .eq('id', postId)
+      .single();
+
+    if (postError || !post) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+
+    const { data: deleted, error: delErr } = await supabase
+      .from('post_likes')
+      .delete()
+      .eq('post_id', postId)
+      .eq('user_id', user_id)
+      .select('id');
+    if (delErr) throw delErr;
+    if (!deleted || deleted.length === 0) {
+      return res.status(404).json({ success: false, error: "Like not found" });
+    }
+
+    const nextCount = Math.max((post.likes_count || 0) - 1, 0);
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ likes_count: nextCount, updated_at: new Date() })
+      .eq('id', postId);
+    if (updateError) throw updateError;
+
+    return res.status(200).json({ success: true, likes_count: nextCount });
+  } catch (error) {
+    console.error("Unlike error:", error);
+    return res.status(500).json({ success: false, error: "Server could not unlike post", message: error.message });
+  }
+});
+
+// GET check if user liked a post
+router.get("/:postId/likes/check", async (req, res) => {
+  const { postId } = req.params;
+  const { user_id } = req.query;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "Missing required field: user_id" });
+    }
+
+    const { data: like, error } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user_id)
+      .maybeSingle();
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, isLiked: !!like });
+  } catch (error) {
+    console.error("Check like error:", error);
+    return res.status(500).json({ success: false, error: "Failed to check like status", message: error.message });
   }
 });
 
