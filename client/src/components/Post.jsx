@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Star } from 'lucide-react';
+import Rating from 'react-rating';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/authentication.jsx';
+import { supabase } from '../lib/supabase';
 import { getMarkdownHTML } from '../lib/markdownUtils';
 import Comment from './Comment';
 
 function Post({ post, loading }) {
   const [publicAdmin, setPublicAdmin] = useState(null);
+  const [userRating, setUserRating] = useState(null); // 0-10 scale
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [pendingStars, setPendingStars] = useState(0); // 0-5
+  const { isAuthenticated, state } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -27,6 +36,50 @@ function Post({ post, loading }) {
     fetchPublicAdmin();
     return () => controller.abort();
   }, []);
+
+  // Load current user's rating for this post
+  useEffect(() => {
+    const loadMyRating = async () => {
+      if (!post?.id || !state?.user?.id) {
+        setUserRating(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', post.id)
+        .eq('user_id', state.user.id)
+        .maybeSingle();
+      if (!error && data) setUserRating(data.rating || 0);
+    };
+    loadMyRating();
+  }, [post?.id, state?.user?.id]);
+
+  const openRatingModal = () => {
+    // Open modal regardless of auth; we'll gate on submit
+    setPendingStars(userRating ? userRating / 2 : 0);
+    setShowRatingModal(true);
+  };
+
+  const submitRating = async (stars) => {
+    if (!isAuthenticated || !state?.user?.id) {
+      // Save current path for redirect after login
+      const from = window.location.pathname + window.location.search + window.location.hash;
+      navigate(`/login?from=${encodeURIComponent(from)}`);
+      return;
+    }
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+      await axios.post(`${apiBase}/posts/${post.id}/ratings`, {
+        rating: stars * 2,
+        user_id: state.user.id,
+      });
+      setUserRating(stars * 2);
+      setShowRatingModal(false);
+    } catch (_) {
+      // ignore
+    }
+  };
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -134,11 +187,22 @@ function Post({ post, loading }) {
 
                   {/* Right Side - YOUR RATING */}
                   <div className="flex items-center gap-3">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-stone-600 text-end">YOUR RATING</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs font-medium text-stone-600">YOUR RATING</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <Star className="w-6 h-6 text-stone-300" />
-                        <span className="text-2xl font-semibold text-stone-300">RATE</span>
+                        {userRating && userRating > 0 ? (
+                          <Rating
+                            readonly
+                            initialRating={userRating / 2}
+                            emptySymbol={<Star className="w-6 h-6 stroke-stone-300" />}
+                            fullSymbol={<Star className="w-6 h-6 fill-yellow-400 stroke-yellow-400" />}
+                          />
+                        ) : (
+                          <button onClick={openRatingModal} className="group flex items-center gap-2 cursor-pointer" title="Rate this post">
+                            <Star className="w-6 h-6 text-stone-300 group-hover:text-stone-400 transition-colors" />
+                            <span className="text-2xl font-semibold text-stone-300 group-hover:text-stone-400 transition-colors">RATE</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -190,8 +254,19 @@ function Post({ post, loading }) {
                     <div className="flex flex-col items-center">
                       <span className="text-xs font-medium text-stone-600">YOUR RATING</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <Star className="w-6 h-6 text-stone-300" />
-                        <span className="text-2xl font-semibold text-stone-300">RATE</span>
+                        {userRating && userRating > 0 ? (
+                          <Rating
+                            readonly
+                            initialRating={userRating / 2}
+                            emptySymbol={<Star className="w-6 h-6 stroke-stone-300" />}
+                            fullSymbol={<Star className="w-6 h-6 fill-yellow-400 stroke-yellow-400" />}
+                          />
+                        ) : (
+                          <button onClick={openRatingModal} className="group flex items-center gap-2 cursor-pointer" title="Rate this post">
+                            <Star className="w-6 h-6 text-stone-300 group-hover:text-stone-400 transition-colors" />
+                            <span className="text-2xl font-semibold text-stone-300 group-hover:text-stone-500 transition-colors">RATE</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -242,6 +317,29 @@ function Post({ post, loading }) {
         <div className="pb-12">
           <Comment postId={post?.id} />
         </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-6 w-80 md:w-100 shadow-xl">
+            <div className="text-2xl font-medium text-center text-stone-700 mb-3">Give your score</div>
+            <div className="flex items-center justify-center mb-3">
+              <Rating
+                fractions={2}
+                initialRating={pendingStars}
+                onChange={(val) => setPendingStars(val)}
+                emptySymbol={<Star className="w-8 h-8 stroke-stone-300" />}
+                fullSymbol={<Star className="w-8 h-8 fill-yellow-400 stroke-yellow-400" />}
+              />
+            </div>
+            <p className="text-[10px] text-center text-stone-400 mb-4">Used for IMHb (in my head base) and Rotten Bananas.</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowRatingModal(false)} className="px-4 py-2 rounded-full bg-stone-200 text-stone-700">Cancel</button>
+              <button onClick={() => submitRating(pendingStars)} className="px-4 py-2 rounded-full bg-stone-800 text-white">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Copy, Facebook, Linkedin, Twitter, X, Trash } from 'lucide-react';
+import { Heart, Copy, Facebook, Linkedin, Twitter, X, Trash, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/authentication.jsx';
 import LoginModal from './LoginModal';
+import axios from 'axios';
 
 // Individual Comment Component
 function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }) {
@@ -26,7 +27,15 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
           alt={comment.author}
         />
         <div className="flex-1">
-          <h4 className="font-semibold text-stone-900 text-sm">{comment.author}</h4>
+          <h4 className="font-semibold text-stone-900 text-sm inline-flex items-center gap-2">
+            <span>{comment.author}</span>
+            {typeof comment.rating === 'number' && comment.rating > 0 && (
+              <span className="text-xs text-stone-500 inline-flex items-center gap-1 align-middle">
+                <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                {Math.round(comment.rating)}
+              </span>
+            )}
+          </h4>
           <p className="text-xs text-stone-400">{comment.created_at || comment.date}</p>
         </div>
         {currentUserId && comment.user_id === currentUserId && (
@@ -57,7 +66,15 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
                     src={reply.avatar || "https://via.placeholder.com/24x24?text=U"} 
                     alt={reply.author}
                   />
-                  <h5 className="font-medium text-stone-900 text-xs">{reply.author}</h5>
+                  <h5 className="font-medium text-stone-900 text-xs inline-flex items-center gap-1">
+                    <span>{reply.author}</span>
+                    {typeof reply.rating === 'number' && reply.rating > 0 && (
+                      <span className="text-[10px] text-stone-500 inline-flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        {Math.round(reply.rating)}
+                      </span>
+                    )}
+                  </h5>
                   <p className="text-xs text-stone-400">{reply.created_at || reply.date}</p>
                   {currentUserId && reply.user_id === currentUserId && (
                     <button
@@ -133,68 +150,146 @@ function Toast({ message, onClose }) {
 function Comment({ postId }) {
   const navigate = useNavigate();
   const { isAuthenticated, state } = useAuth();
-  const [likes, setLikes] = useState(321);
+  const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [comments, setComments] = useState([]);
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+
+  // Helper function to load comments with ratings
+  const loadCommentsWithRatings = useCallback(async () => {
+    if (!postId) return;
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        users!inner(
+          id,
+          name,
+          profile_pic
+        )
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('Error loading comments:', error);
+      return;
+    }
+
+    // Build one-level threaded structure (parent -> replies)
+    const byId = new Map();
+    (data || []).forEach((c) => {
+      byId.set(c.id, {
+        id: c.id,
+        user_id: c.user_id,
+        author: c.users?.name || 'User',
+        date: new Date(c.created_at).toLocaleString(),
+        content: c.comment_text,
+        avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
+        replies: [],
+        parent_id: c.parent_id,
+        rating: null,
+      });
+    });
+
+    const roots = [];
+    byId.forEach((c) => {
+      if (c.parent_id) {
+        const parent = byId.get(c.parent_id);
+        if (parent) parent.replies.push(c);
+      } else {
+        roots.push(c);
+      }
+    });
+    
+    // Fetch ratings for these users for this post
+    const uniqueUserIds = [...new Set((data || []).map((c) => c.user_id).filter(Boolean))];
+    if (uniqueUserIds.length > 0) {
+      const { data: ratings } = await supabase
+        .from('post_ratings')
+        .select('user_id,rating')
+        .eq('post_id', postId)
+        .in('user_id', uniqueUserIds);
+      (ratings || []).forEach((r) => {
+        // assign rating to both root and replies in byId
+        byId.forEach((val) => {
+          if (val.user_id === r.user_id) val.rating = r.rating;
+        });
+      });
+    }
+
+    setComments(roots);
+  }, [postId]);
 
   // Load comments from database (Supabase)
   useEffect(() => {
-    const loadComments = async () => {
+    loadCommentsWithRatings();
+  }, [loadCommentsWithRatings]);
+
+  // Load likes data: likes_count and per-user isLiked (server check)
+  useEffect(() => {
+    const loadLikesData = async () => {
       if (!postId) return;
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          users!inner(
-            id,
-            name,
-            profile_pic
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-      if (error) {
-        console.error('Error loading comments:', error);
-        return;
-      }
-
-      // Build one-level threaded structure (parent -> replies)
-      const byId = new Map();
-      (data || []).forEach((c) => {
-        byId.set(c.id, {
-          id: c.id,
-          user_id: c.user_id,
-          author: c.users?.name || 'User',
-          date: new Date(c.created_at).toLocaleString(),
-          content: c.comment_text,
-          avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
-          replies: [],
-          parent_id: c.parent_id,
-        });
-      });
-
-      const roots = [];
-      byId.forEach((c) => {
-        if (c.parent_id) {
-          const parent = byId.get(c.parent_id);
-          if (parent) parent.replies.push(c);
-        } else {
-          roots.push(c);
+      
+      try {
+        // Get likes count from post
+        const { data: post, error: postError } = await supabase
+          .from('posts')
+          .select('likes_count')
+          .eq('id', postId)
+          .single();
+        
+        if (!postError && post) {
+          setLikes(post.likes_count || 0);
         }
-      });
-      setComments(roots);
+        // Check isLiked from server when authenticated
+        if (isAuthenticated && state.user?.id) {
+          try {
+            const res = await axios.get(`${apiBase}/posts/${postId}/likes/check`, {
+              params: { user_id: state.user.id }
+            });
+            setIsLiked(Boolean(res?.data?.isLiked));
+          } catch (_) {
+            setIsLiked(false);
+          }
+        } else {
+          setIsLiked(false);
+        }
+      } catch (error) {
+        console.error('Error loading likes:', error);
+      }
     };
+    
+    loadLikesData();
+  }, [postId, isAuthenticated, state.user?.id, apiBase]);
 
-    loadComments();
-  }, [postId]);
+  const handleLike = async () => {
+    // Check authentication first
+    if (!isAuthenticated || !state.user?.id) {
+      navigate('/login');
+      return;
+    }
 
-  const handleLike = () => {
-    // สมมติว่าผู้ใช้ยังไม่ได้ login - แสดง login modal
-    setShowLoginModal(true);
+    try {
+      if (isLiked) {
+        // Unlike
+        await axios.delete(`${apiBase}/posts/${postId}/likes`, { data: { user_id: state.user.id } });
+        setLikes(prev => Math.max(prev - 1, 0));
+        setIsLiked(false);
+      } else {
+        // Like
+        await axios.post(`${apiBase}/posts/${postId}/likes`, { user_id: state.user.id });
+        setLikes(prev => prev + 1);
+        setIsLiked(true);
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Optionally show error message to user
+    }
   };
 
   const handleCopyLink = async () => {
@@ -226,45 +321,21 @@ function Comment({ postId }) {
         return;
     }
     
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    // Open in popup window with proper security settings
+    const width = 600;
+    const height = 500;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    
+    window.open(
+      shareUrl, 
+      '_blank', 
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,noopener,noreferrer`
+    );
   };
 
   const refreshComments = async () => {
-    const { data } = await supabase
-      .from('comments')
-      .select(`
-        *,
-        users!inner(
-          id,
-          name,
-          profile_pic
-        )
-      `)
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true });
-    const byId = new Map();
-    (data || []).forEach((c) => {
-      byId.set(c.id, {
-        id: c.id,
-        user_id: c.user_id,
-        author: c.users?.name || 'User',
-        date: new Date(c.created_at).toLocaleString(),
-        content: c.comment_text,
-        avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
-        replies: [],
-        parent_id: c.parent_id,
-      });
-    });
-    const roots = [];
-    byId.forEach((c) => {
-      if (c.parent_id) {
-        const parent = byId.get(c.parent_id);
-        if (parent) parent.replies.push(c);
-      } else {
-        roots.push(c);
-      }
-    });
-    setComments(roots);
+    await loadCommentsWithRatings();
   };
 
   const handleDelete = async (commentId, isReply) => {
@@ -297,43 +368,8 @@ function Comment({ postId }) {
       });
       if (error) throw error;
       setComment('');
-      // Reload
-      const { data } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          users!inner(
-            id,
-            name,
-            profile_pic
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-      // Rebuild
-      const byId = new Map();
-      (data || []).forEach((c) => {
-        byId.set(c.id, {
-          id: c.id,
-          user_id: c.user_id,
-          author: c.users?.name || 'User',
-          date: new Date(c.created_at).toLocaleString(),
-          content: c.comment_text,
-          avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
-          replies: [],
-          parent_id: c.parent_id,
-        });
-      });
-      const roots = [];
-      byId.forEach((c) => {
-        if (c.parent_id) {
-          const parent = byId.get(c.parent_id);
-          if (parent) parent.replies.push(c);
-        } else {
-          roots.push(c);
-        }
-      });
-      setComments(roots);
+      // Reload with ratings
+      await loadCommentsWithRatings();
     } finally {
       setIsSubmitting(false);
     }
@@ -352,42 +388,8 @@ function Comment({ postId }) {
       parent_id: commentId,
     });
     if (!error) {
-      // simple reload
-      const { data } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          users!inner(
-            id,
-            name,
-            profile_pic
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-      const byId = new Map();
-      (data || []).forEach((c) => {
-        byId.set(c.id, {
-          id: c.id,
-          user_id: c.user_id,
-          author: c.users?.name || 'User',
-          date: new Date(c.created_at).toLocaleString(),
-          content: c.comment_text,
-          avatar: c.users?.profile_pic || 'https://via.placeholder.com/32x32?text=U',
-          replies: [],
-          parent_id: c.parent_id,
-        });
-      });
-      const roots = [];
-      byId.forEach((c) => {
-        if (c.parent_id) {
-          const parent = byId.get(c.parent_id);
-          if (parent) parent.replies.push(c);
-        } else {
-          roots.push(c);
-        }
-      });
-      setComments(roots);
+      // Reload with ratings
+      await loadCommentsWithRatings();
     }
   };
 
@@ -400,7 +402,7 @@ function Comment({ postId }) {
           {/* Like Button */}
           <button
             onClick={handleLike}
-            className={`flex items-center justify-center w-full sm:w-auto gap-2 px-4 py-2 rounded-full border transition-colors ${
+            className={`flex items-center justify-center w-full sm:w-auto gap-2 px-4 py-2 rounded-full border transition-colors cursor-pointer ${
               isLiked 
                 ? 'bg-red-50 border-red-200 text-red-600' 
                 : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
@@ -416,7 +418,7 @@ function Comment({ postId }) {
           {/* Copy Link Button */}
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
           >
             <Copy className="w-4 h-4" />
             <span className="text-sm font-medium flex">Copy link</span>
@@ -424,19 +426,19 @@ function Comment({ postId }) {
           <div className="flex flex-row gap-2">
           <button
             onClick={() => handleShare('facebook')}
-            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors"
+            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer"
           >
             <Facebook className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={() => handleShare('linkedin')}
-            className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition-colors"
+            className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition-colors cursor-pointer"
           >
             <Linkedin className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={() => handleShare('twitter')}
-            className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center hover:bg-blue-500 transition-colors"
+            className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center hover:bg-blue-500 transition-colors cursor-pointer"
           >
             <Twitter className="w-4 h-4 text-white" />
           </button>
