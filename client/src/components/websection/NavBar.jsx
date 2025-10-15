@@ -1,4 +1,4 @@
-import { AlignJustify } from 'lucide-react';
+import { AlignJustify, Bell, ChevronDown, User, RotateCcw, LogOut, PanelsTopLeft } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,29 +27,50 @@ const NavBar = () => {
       <div className="flex items-center space-x-[8px] max-sm:hidden">
         {isAuthenticated ? (
           // Authenticated state
-          <div className="flex items-center space-x-4">
-            <span className="text-stone-800 font-medium">
-              {user?.username || user?.name || 'User'}
-            </span>
+          <div className="flex items-center space-x-3">
+            {/* Notifications */}
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="relative grid place-items-center w-9 h-9 rounded-full border border-stone-200 bg-white text-stone-700 hover:bg-stone-100"
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full" aria-hidden="true"></span>
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-1.5 bg-stone-900 text-white rounded-full text-sm hover:bg-stone-800 transition-colors">
-                  Menu
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100">
+                  {user?.profilePic && (
+                    <img
+                      src={user.profilePic}
+                      alt="User avatar"
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
+                  )}
+                  <span className="text-stone-800 font-medium">
+                    {user?.username || user?.name || 'User'}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-stone-500" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link to="/profile" className="w-full">Profile</Link>
+              <DropdownMenuContent className="w-48 bg-stone-50 border-stone-200 mt-4">
+                <DropdownMenuItem className="hover:bg-stone-100">
+                  <User className="w-4 h-4 mr-2" />
+                  <Link to="/profile" className="w-full text-stone-800">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-stone-100">
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  <Link to="/reset-password" className="w-full text-stone-800">Reset password</Link>
                 </DropdownMenuItem>
                 {user?.role === 'admin' && (
-                  <DropdownMenuItem>
-                    <Link to="/admin" className="w-full">Admin Panel</Link>
+                  <DropdownMenuItem className="hover:bg-stone-100">
+                    <PanelsTopLeft className="w-4 h-4 mr-2" />
+                    <Link to="/admin" className="w-full text-stone-800">Admin Panel</Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-red-600">
+                <DropdownMenuSeparator className="bg-stone-300" />
+                <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50">
+                  <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -78,38 +99,50 @@ const NavBar = () => {
       <div className="sm:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild><AlignJustify /></DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[100vw] border-0 rounded-none">
-            <div className="space-y-4 p-2">
+          <DropdownMenuContent className="w-[100vw] border-0 rounded-none bg-stone-50">
+            <div className="space-y-3 p-4">
               {isAuthenticated ? (
-                // Authenticated mobile menu
+                // Authenticated mobile menu - show user info and menu items
                 <>
-                  <DropdownMenuLabel>{user?.username || user?.name || 'User'}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="hover:bg-transparent p-0">
-                    <Link 
-                      to="/profile"
-                      className="w-full px-4 py-3 border border-stone-800 text-stone-800 rounded-full text-sm hover:bg-stone-100 transition-colors block text-center"
+                  <div className="flex items-center gap-3 mb-4">
+                    {user?.profilePic && (
+                      <img
+                        src={user.profilePic}
+                        alt="User avatar"
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    )}
+                    <span className="text-stone-800 font-medium">
+                      {user?.username || user?.name || 'User'}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Notifications"
+                      className="ml-auto relative grid place-items-center w-8 h-8 rounded-full border border-stone-200 bg-white text-stone-700 hover:bg-stone-100"
                     >
-                      Profile
-                    </Link>
+                      <Bell className="w-4 h-4" />
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-rose-500 rounded-full" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                  <DropdownMenuSeparator className="bg-stone-300" />
+                  <DropdownMenuItem className="hover:bg-stone-100">
+                    <User className="w-4 h-4 mr-2" />
+                    <Link to="/profile" className="w-full text-stone-800">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-stone-100">
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    <Link to="/reset-password" className="w-full text-stone-800">Reset password</Link>
                   </DropdownMenuItem>
                   {user?.role === 'admin' && (
-                    <DropdownMenuItem className="hover:bg-transparent p-0">
-                      <Link 
-                        to="/admin"
-                        className="w-full px-4 py-3 border border-stone-800 text-stone-800 rounded-full text-sm hover:bg-stone-100 transition-colors block text-center"
-                      >
-                        Admin Panel
-                      </Link>
+                    <DropdownMenuItem className="hover:bg-stone-100">
+                      <PanelsTopLeft className="w-4 h-4 mr-2" />
+                      <Link to="/admin" className="w-full text-stone-800">Admin Panel</Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem className="hover:bg-transparent p-0">
-                    <button
-                      onClick={logout}
-                      className="w-full px-4 py-3 bg-red-600 text-white rounded-full text-sm hover:bg-red-700 transition-colors block text-center"
-                    >
-                      Logout
-                    </button>
+                  <DropdownMenuSeparator className="bg-stone-300" />
+                  <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
                   </DropdownMenuItem>
                 </>
               ) : (

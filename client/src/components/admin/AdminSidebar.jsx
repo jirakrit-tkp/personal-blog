@@ -113,7 +113,7 @@ const AdminSidebar = () => {
       {/* Brand Header */}
       <div className="px-6 pb-8 border-b border-stone-200 mb-6">
         <div className="flex items-center mb-2">
-          <img src="/Plotline_text.svg" alt="Plotline logo" className="w-40 h-40 -mb-15"/>
+          <img src="/Plotline_text.svg" alt="Plotline logo" className="w-40 h-auto mt-8 mb-3"/>
         </div>
         <div className="text-orange-300 text-xl font-semibold">Admin panel</div>
       </div>
