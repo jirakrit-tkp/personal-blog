@@ -81,7 +81,8 @@ router.get("/:id", [validatePostId], async (req, res) => {
         post_genres!inner(
           genres(
             id,
-            name
+            name,
+            color
           )
         )
       `)
@@ -230,7 +231,8 @@ router.get("/", async (req, res) => {
         post_genres(
           genres(
             id,
-            name
+            name,
+            color
           )
         )
       `, { count: 'exact' })
