@@ -17,10 +17,10 @@ const NavBar = () => {
   NavBar.displayName = "NavBar";
 
   return (
-    <nav className="flex flex-row justify-between items-center px-6 py-4 bg-stone-50 border-b border-stone-200">
+    <nav className="sticky top-0 z-50 flex flex-row justify-between items-center px-4 py-3 bg-stone-50/95 backdrop-blur border-b border-stone-200">
       {/* Logo */}
       <Link to="/">
-        <img src="/Plotline_text.svg" alt="Plotline logo" className="w-25 h-25 mx-5 md:mx-10 -my-5"/>
+        <img src="/Plotline_text.svg" alt="Plotline logo" className="w-25 h-auto mx-5 md:mx-10 my-3"/>
       </Link>
 
       {/* Desktop Buttons */}
