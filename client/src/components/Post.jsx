@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Star } from 'lucide-react';
+import { Star, User } from 'lucide-react';
 import Rating from 'react-rating';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -291,11 +291,17 @@ function Post({ post, loading }) {
               <div className="bg-stone-200 rounded-lg p-6 shadow-sm border border-stone-200">
                 {/* Author Header - Horizontal Layout */}
                 <div className="flex items-start gap-4 mb-4">
-                  <img 
-                    className="w-12 h-12 rounded-full flex-shrink-0 object-cover" 
-                    src={publicAdmin?.profile_pic || "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"} 
-                    alt={publicAdmin?.name ? `${publicAdmin?.name} profile picture` : "Author profile"}
-                  />
+                  {publicAdmin?.profile_pic ? (
+                    <img 
+                      className="w-12 h-12 rounded-full flex-shrink-0 object-cover" 
+                      src={publicAdmin.profile_pic} 
+                      alt={publicAdmin?.name ? `${publicAdmin?.name} profile picture` : "Author profile"}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+                      <User className="w-6 h-6 text-stone-400" />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <p className="text-sm text-stone-500 mb-1">Author</p>
                     <h4 className="font-semibold text-stone-900">{publicAdmin?.name || "Admin"}</h4>

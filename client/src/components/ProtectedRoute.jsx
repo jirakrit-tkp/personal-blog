@@ -20,8 +20,13 @@ function ProtectedRoute({
     );
   }
 
-  if (!isAuthenticated || userRole !== requiredRole) {
+  if (!isAuthenticated) {
     // คืนค่า null ขณะที่ Navigate ทำการเปลี่ยนเส้นทาง
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRole && userRole !== requiredRole) {
+    // ถ้ามี requiredRole และ userRole ไม่ตรงกัน ให้ redirect
     return <Navigate to="/login" replace />;
   }
 

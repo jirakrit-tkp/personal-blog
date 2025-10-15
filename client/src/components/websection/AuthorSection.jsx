@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getMarkdownHTML } from '../../lib/markdownUtils';
+import { User } from 'lucide-react';
 
 const AuthorSection = () => {
   const [publicAdmin, setPublicAdmin] = useState(null);
@@ -80,7 +81,9 @@ const AuthorSection = () => {
                     className="rounded-2xl shadow-lg w-full max-w-[300px] lg:w-[386px] h-auto lg:h-[529px] object-cover"
                   />
                 ) : (
-                  <div className="rounded-2xl bg-stone-200 w-full max-w-[300px] lg:w-[386px] h-[420px] lg:h-[529px] shadow-lg" aria-hidden="true" />
+                  <div className="rounded-2xl bg-stone-200 w-full max-w-[300px] lg:w-[386px] h-[420px] lg:h-[529px] shadow-lg flex items-center justify-center" aria-hidden="true">
+                    <User className="w-24 h-24 text-stone-400" />
+                  </div>
                 )}
               </div>
             </div>

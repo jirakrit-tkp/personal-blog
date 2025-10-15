@@ -7,12 +7,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
 
 const NavBar = () => {
   const { isAuthenticated, state, logout } = useAuth();
   const { user } = state;
+  const navigate = useNavigate();
 
   NavBar.displayName = "NavBar";
 
@@ -40,12 +41,16 @@ const NavBar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100">
-                  {user?.profilePic && (
+                  {user?.profilePic ? (
                     <img
                       src={user.profilePic}
                       alt="User avatar"
                       className="w-9 h-9 rounded-full object-cover"
                     />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-stone-200 flex items-center justify-center">
+                      <User className="w-5 h-5 text-stone-400" />
+                    </div>
                   )}
                   <span className="text-stone-800 font-medium">
                     {user?.username || user?.name || 'User'}
@@ -54,18 +59,27 @@ const NavBar = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48 bg-stone-50 border-stone-200 mt-4">
-                <DropdownMenuItem className="hover:bg-stone-100">
+                <DropdownMenuItem 
+                  className="hover:bg-stone-100 cursor-pointer"
+                  onClick={() => navigate(user?.role === 'admin' ? "/admin/profile" : "/profile")}
+                >
                   <User className="w-4 h-4 mr-2" />
-                  <Link to="/profile" className="w-full text-stone-800">Profile</Link>
+                  <span className="text-stone-800">Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-stone-100">
+                <DropdownMenuItem 
+                  className="hover:bg-stone-100 cursor-pointer"
+                  onClick={() => navigate(user?.role === 'admin' ? "/admin/reset-password" : "/reset-password")}
+                >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  <Link to="/reset-password" className="w-full text-stone-800">Reset password</Link>
+                  <span className="text-stone-800">Reset password</span>
                 </DropdownMenuItem>
                 {user?.role === 'admin' && (
-                  <DropdownMenuItem className="hover:bg-stone-100">
+                  <DropdownMenuItem 
+                    className="hover:bg-stone-100 cursor-pointer"
+                    onClick={() => navigate("/admin")}
+                  >
                     <PanelsTopLeft className="w-4 h-4 mr-2" />
-                    <Link to="/admin" className="w-full text-stone-800">Admin Panel</Link>
+                    <span className="text-stone-800">Admin Panel</span>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator className="bg-stone-300" />
@@ -105,12 +119,16 @@ const NavBar = () => {
                 // Authenticated mobile menu - show user info and menu items
                 <>
                   <div className="flex items-center gap-3 mb-4">
-                    {user?.profilePic && (
+                    {user?.profilePic ? (
                       <img
                         src={user.profilePic}
                         alt="User avatar"
                         className="w-10 h-10 rounded-full object-cover"
                       />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+                        <User className="w-6 h-6 text-stone-400" />
+                      </div>
                     )}
                     <span className="text-stone-800 font-medium">
                       {user?.username || user?.name || 'User'}
@@ -125,18 +143,27 @@ const NavBar = () => {
                     </button>
                   </div>
                   <DropdownMenuSeparator className="bg-stone-300" />
-                  <DropdownMenuItem className="hover:bg-stone-100">
+                  <DropdownMenuItem 
+                    className="hover:bg-stone-100 cursor-pointer"
+                    onClick={() => navigate(user?.role === 'admin' ? "/admin/profile" : "/profile")}
+                  >
                     <User className="w-4 h-4 mr-2" />
-                    <Link to="/profile" className="w-full text-stone-800">Profile</Link>
+                    <span className="text-stone-800">Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-stone-100">
+                  <DropdownMenuItem 
+                    className="hover:bg-stone-100 cursor-pointer"
+                    onClick={() => navigate(user?.role === 'admin' ? "/admin/reset-password" : "/reset-password")}
+                  >
                     <RotateCcw className="w-4 h-4 mr-2" />
-                    <Link to="/reset-password" className="w-full text-stone-800">Reset password</Link>
+                    <span className="text-stone-800">Reset password</span>
                   </DropdownMenuItem>
                   {user?.role === 'admin' && (
-                    <DropdownMenuItem className="hover:bg-stone-100">
+                    <DropdownMenuItem 
+                      className="hover:bg-stone-100 cursor-pointer"
+                      onClick={() => navigate("/admin")}
+                    >
                       <PanelsTopLeft className="w-4 h-4 mr-2" />
-                      <Link to="/admin" className="w-full text-stone-800">Admin Panel</Link>
+                      <span className="text-stone-800">Admin Panel</span>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator className="bg-stone-300" />
