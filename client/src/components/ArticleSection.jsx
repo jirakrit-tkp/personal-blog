@@ -1,4 +1,5 @@
 import { Input } from './ui/input'
+import { getGenreChipClasses } from '@/lib/genreUtils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { LinkedinIcon, Github, Mail, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
@@ -176,7 +177,7 @@ function BlogCard(props) {
           <div className="flex flex-col">
             <div className="flex flex-wrap gap-2 mb-2">
               {genres.map((genre, idx) => (
-                <span key={`${genre.id}-${idx}`} className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600">
+                <span key={`${genre.id}-${idx}`} className={`rounded-full px-3 py-1 text-sm font-semibold ${getGenreChipClasses(genre)}`}>
                   {genre.name}
                 </span>
               ))}

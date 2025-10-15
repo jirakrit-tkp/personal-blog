@@ -8,6 +8,7 @@ import { useAuth } from '../context/authentication.jsx';
 import { supabase } from '../lib/supabase';
 import { getMarkdownHTML } from '../lib/markdownUtils';
 import Comment from './Comment';
+import { getGenreChipClasses } from '../lib/genreUtils';
 
 function Post({ post, loading }) {
   const [publicAdmin, setPublicAdmin] = useState(null);
@@ -115,7 +116,7 @@ function Post({ post, loading }) {
                 <div className="flex flex-wrap gap-2">
                   {post.genres && post.genres.length > 0 ? (
                     post.genres.map((genre, idx) => (
-                      <span key={`${genre.id}-${idx}`} className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600">
+                      <span key={`${genre.id}-${idx}`} className={`rounded-full px-3 py-1 text-sm font-semibold ${getGenreChipClasses(genre)}`}>
                         {genre.name}
                       </span>
                     ))
