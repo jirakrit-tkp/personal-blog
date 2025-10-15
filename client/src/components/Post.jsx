@@ -287,7 +287,7 @@ function Post({ post, loading }) {
 
           {/* Right Column - Author Box (20%) - Top-bottom on small, right on large */}
           <div className="w-full lg:w-1/5">
-            <div className="sticky top-8">
+            <div className="sticky top-20">
               <div className="bg-stone-200 rounded-lg p-6 shadow-sm border border-stone-200">
                 {/* Author Header - Horizontal Layout */}
                 <div className="flex items-start gap-4 mb-4">
