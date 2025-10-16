@@ -37,7 +37,7 @@ router.post("/register", async (req, res) => {
     // Insert profile row
     const { data: inserted, error: insertErr } = await supabase
       .from("users")
-      .insert({ id: supabaseUserId, username, name, role: "user" })
+      .insert({ id: supabaseUserId, username, name, role: "member" })
       .select("*")
       .limit(1);
     if (insertErr) throw insertErr;

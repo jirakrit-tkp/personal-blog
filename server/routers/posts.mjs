@@ -43,6 +43,44 @@ router.post("/", [validateCreatePostData], async (req, res) => {
       if (genreError) throw genreError;
     }
 
+    // แจ้งเตือน member ทั้งหมดเมื่อ Admin สร้าง blog ใหม่
+    try {
+      // ดึงข้อมูล member ทั้งหมด (ไม่รวม admin)
+      const { data: members, error: membersError } = await supabase
+        .from('users')
+        .select('id, name')
+        .eq('role', 'member');
+
+      if (!membersError && members && members.length > 0) {
+        // ดึงข้อมูล admin name
+        const { data: adminData } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', author_id)
+          .single();
+
+        const adminName = adminData?.name || 'Admin';
+
+        // สร้าง notifications สำหรับ member แต่ละคน (ไม่แจ้งเตือน admin ตัวเอง)
+        const notificationPromises = members.map(member =>
+          supabase.from('notifications').insert({
+            user_id: member.id,
+            type: 'new_blog',
+            blog_id: postData.id,
+            blog_title: title.trim(),
+            actor_id: author_id,
+            actor_name: adminName
+          })
+        );
+
+        await Promise.all(notificationPromises);
+        console.log(`✅ Notifications sent to ${members.length} members for new blog: ${title.trim()}`);
+      }
+    } catch (notificationError) {
+      // ไม่ให้ notification error ทำให้การสร้าง blog ล้มเหลว
+      console.error("⚠️ Failed to send notifications:", notificationError.message);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Created post successfully",
