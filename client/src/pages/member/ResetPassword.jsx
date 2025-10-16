@@ -19,7 +19,6 @@ const ResetPassword = () => {
   const [errors, setErrors] = useState({});
   const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
   const [isConfirmResetOpen, setIsConfirmResetOpen] = useState(false);
-  const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
 
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
 
@@ -210,7 +209,7 @@ const ResetPassword = () => {
           </button>
           <button
             type="button"
-            onClick={() => setIsConfirmCancelOpen(true)}
+            onClick={handleCancel}
             className="w-full sm:w-auto px-6 py-2 bg-transparent text-stone-800 rounded-full hover:bg-stone-50 transition-colors"
             disabled={loading}
           >
@@ -225,15 +224,6 @@ const ResetPassword = () => {
         title="Confirm reset password"
         message="Are you sure you want to reset your password?"
         confirmText="Reset"
-        cancelText="Back"
-      />
-      <ConfirmModal
-        isOpen={isConfirmCancelOpen}
-        onClose={() => setIsConfirmCancelOpen(false)}
-        onConfirm={() => { setIsConfirmCancelOpen(false); handleCancel(); }}
-        title="Discard changes?"
-        message="Your changes will be lost."
-        confirmText="Discard"
         cancelText="Back"
       />
       {/* Snackbar */}
