@@ -1,7 +1,7 @@
 import { Input } from './ui/input'
 import { getGenreChipClasses } from '@/lib/genreUtils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { LinkedinIcon, Github, Mail, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LinkedinIcon, Github, Mail, Search, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useArticles } from '@/hooks/useArticles';
@@ -197,8 +197,12 @@ function BlogCard(props) {
             <div className="flex items-center justify-between text-sm">
               {props.author && (
                 <div className="flex items-center">
-                  {props.author.profile_pic && (
+                  {props.author.profile_pic ? (
                     <img className="w-8 h-8 rounded-full mr-2 object-cover" src={props.author.profile_pic} alt={props.author.name || ''} />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center mr-2">
+                      <User className="w-4 h-4 text-stone-400" />
+                    </div>
                   )}
                   {props.author.name && (
                     <span>{props.author.name}</span>
