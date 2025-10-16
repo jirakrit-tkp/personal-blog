@@ -5,6 +5,7 @@ import MemberLayout from '../../components/member/MemberLayout';
 import axios from 'axios';
 import Snackbar from '../../components/ui/Snackbar';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import FormInput from '../../components/ui/FormInput';
 
 const ResetPassword = () => {
   const { state, isAuthenticated, fetchUser } = useAuth();
@@ -141,24 +142,20 @@ const ResetPassword = () => {
 
   return (
     <MemberLayout>
-      <div className="bg-stone-200 rounded-lg shadow-sm p-6">
+      <div className="bg-stone-200 lg:rounded-lg lg:shadow-sm p-6">
       <form className="space-y-6">
         {/* Current Password */}
         <div>
-          <label htmlFor="currentPassword" className="block text-sm font-normal text-black mb-1">
-            Current password
-          </label>
-          <input
+          <FormInput
             type="password"
-            id="currentPassword"
             name="currentPassword"
+            className="w-full"
             value={formData.currentPassword}
             onChange={handleInputChange}
             placeholder="Current password"
-            className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
-              errors.currentPassword ? 'border-red-500 text-red-600 focus:ring-red-500' : 'border-stone-300 focus:ring-blue-500'
-            }`}
-            required={false}
+            label="Current password"
+            hasError={!!errors.currentPassword}
+            disabled={loading}
           />
           {errors.currentPassword && (
             <p className="text-red-500 text-sm mt-1">{errors.currentPassword}</p>
@@ -167,20 +164,16 @@ const ResetPassword = () => {
 
         {/* New Password */}
         <div>
-          <label htmlFor="newPassword" className="block text-sm font-normal text-black mb-1">
-            New password
-          </label>
-          <input
+          <FormInput
             type="password"
-            id="newPassword"
             name="newPassword"
+            className="w-full"
             value={formData.newPassword}
             onChange={handleInputChange}
             placeholder="New password"
-            className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
-              errors.newPassword ? 'border-red-500 text-red-600 focus:ring-red-500' : 'border-stone-300 focus:ring-blue-500'
-            }`}
-            required={false}
+            label="New password"
+            hasError={!!errors.newPassword}
+            disabled={loading}
           />
           {errors.newPassword && (
             <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>
@@ -189,20 +182,16 @@ const ResetPassword = () => {
 
         {/* Confirm New Password */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-normal text-black mb-1">
-            Confirm new password
-          </label>
-          <input
+          <FormInput
             type="password"
-            id="confirmPassword"
+            className="w-full"
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleInputChange}
             placeholder="Confirm new password"
-            className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
-              errors.confirmPassword ? 'border-red-500 text-red-600 focus:ring-red-500' : 'border-stone-300 focus:ring-blue-500'
-            }`}
-            required={false}
+            label="Confirm new password"
+            hasError={!!errors.confirmPassword}
+            disabled={loading}
           />
           {errors.confirmPassword && (
             <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>

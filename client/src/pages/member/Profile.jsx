@@ -172,7 +172,7 @@ const Profile = () => {
 
   return (
     <MemberLayout>
-      <div className="bg-stone-200 rounded-lg shadow-sm p-6">
+      <div className="bg-stone-200 lg:rounded-lg lg:shadow-sm p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
         {/* Profile Picture */}
         <div className="flex flex-col lg:flex-row lg:items-center gap-6">
