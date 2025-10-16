@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/authentication.jsx';
 import { useNavigate } from 'react-router-dom';
 import MemberLayout from '../../components/member/MemberLayout';
+import axios from 'axios';
+import Snackbar from '../../components/ui/Snackbar';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import FormInput from '../../components/ui/FormInput';
 
 const ResetPassword = () => {
-  const { state, isAuthenticated } = useAuth();
+  const { state, isAuthenticated, fetchUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     currentPassword: '',
@@ -13,6 +17,10 @@ const ResetPassword = () => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
+  const [isConfirmResetOpen, setIsConfirmResetOpen] = useState(false);
+
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
 
   ResetPassword.displayName = "ResetPassword";
 
@@ -23,6 +31,20 @@ const ResetPassword = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Show snackbar after refresh if a message flag exists
+  useEffect(() => {
+    if (isAuthenticated) {
+      const raw = sessionStorage.getItem('snackbar_post_refresh');
+      if (raw) {
+        try {
+          const payload = JSON.parse(raw);
+          setSnackbar({ isOpen: true, message: payload.message || 'Done', type: payload.type || 'success' });
+        } catch (_) {}
+        sessionStorage.removeItem('snackbar_post_refresh');
+      }
+    }
+  }, [isAuthenticated]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -30,13 +52,17 @@ const ResetPassword = () => {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
       }));
     }
+  };
+
+  const handleCancel = () => {
+    setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setErrors({});
   };
 
   const validateForm = () => {
@@ -66,37 +92,47 @@ const ResetPassword = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+  const doResetPassword = async () => {
     setLoading(true);
-    
     try {
-      // TODO: Implement password reset API call
-      console.log('Resetting password:', {
-        currentPassword: formData.currentPassword,
+      await axios.put(`${apiBase}/auth/reset-password`, {
+        oldPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('Password updated successfully!');
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+
+      // Persist snackbar to show after refresh
+      sessionStorage.setItem('snackbar_post_refresh', JSON.stringify({ message: 'Password updated successfully!', type: 'success' }));
+
+      // Re-login with new password to refresh token and avoid logout
+      if (state?.user?.email) {
+        const loginRes = await axios.post(`${apiBase}/auth/login`, {
+          email: state.user.email,
+          password: formData.newPassword
+        });
+        const newToken = loginRes.data?.access_token;
+        if (newToken) {
+          localStorage.setItem('token', newToken);
+          await fetchUser();
+        }
+      }
+
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      console.error('Error resetting password:', error);
-      alert('Failed to reset password. Please try again.');
+      const msg = error.response?.data?.error || 'Failed to reset password. Please try again.';
+      setSnackbar({ isOpen: true, message: msg, type: 'error' });
     } finally {
       setLoading(false);
+      setIsConfirmResetOpen(false);
     }
+  };
+
+  const handleClickReset = () => {
+    if (!validateForm()) return;
+    setIsConfirmResetOpen(true);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, isOpen: false }));
   };
 
   if (!isAuthenticated) {
@@ -105,25 +141,20 @@ const ResetPassword = () => {
 
   return (
     <MemberLayout>
-      <h2 className="text-xl font-bold text-black mb-6">Reset password</h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-stone-200 lg:rounded-lg lg:shadow-sm p-6">
+      <form className="space-y-6">
         {/* Current Password */}
         <div>
-          <label htmlFor="currentPassword" className="block text-sm font-normal text-black mb-1">
-            Current password
-          </label>
-          <input
+          <FormInput
             type="password"
-            id="currentPassword"
             name="currentPassword"
+            className="w-full"
             value={formData.currentPassword}
             onChange={handleInputChange}
             placeholder="Current password"
-            className={`w-full px-3 py-2 border rounded text-sm font-normal bg-white ${
-              errors.currentPassword ? 'border-red-300' : 'border-stone-300'
-            }`}
-            required
+            label="Current password"
+            hasError={!!errors.currentPassword}
+            disabled={loading}
           />
           {errors.currentPassword && (
             <p className="text-red-500 text-sm mt-1">{errors.currentPassword}</p>
@@ -132,20 +163,16 @@ const ResetPassword = () => {
 
         {/* New Password */}
         <div>
-          <label htmlFor="newPassword" className="block text-sm font-normal text-black mb-1">
-            New password
-          </label>
-          <input
+          <FormInput
             type="password"
-            id="newPassword"
             name="newPassword"
+            className="w-full"
             value={formData.newPassword}
             onChange={handleInputChange}
             placeholder="New password"
-            className={`w-full px-3 py-2 border rounded text-sm font-normal bg-white ${
-              errors.newPassword ? 'border-red-300' : 'border-stone-300'
-            }`}
-            required
+            label="New password"
+            hasError={!!errors.newPassword}
+            disabled={loading}
           />
           {errors.newPassword && (
             <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>
@@ -154,20 +181,16 @@ const ResetPassword = () => {
 
         {/* Confirm New Password */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-normal text-black mb-1">
-            Confirm new password
-          </label>
-          <input
+          <FormInput
             type="password"
-            id="confirmPassword"
+            className="w-full"
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleInputChange}
             placeholder="Confirm new password"
-            className={`w-full px-3 py-2 border rounded text-sm font-normal bg-white ${
-              errors.confirmPassword ? 'border-red-300' : 'border-stone-300'
-            }`}
-            required
+            label="Confirm new password"
+            hasError={!!errors.confirmPassword}
+            disabled={loading}
           />
           {errors.confirmPassword && (
             <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
@@ -175,16 +198,43 @@ const ResetPassword = () => {
         </div>
 
         {/* Reset Button */}
-        <div className="flex justify-start">
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-start">
           <button
-            type="submit"
+            type="button"
+            onClick={handleClickReset}
             disabled={loading}
-            className="px-6 py-2 bg-black text-white rounded text-sm font-normal hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full sm:w-auto px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Resetting...' : 'Reset password'}
           </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="w-full sm:w-auto px-6 py-2 bg-transparent text-stone-800 rounded-full hover:bg-stone-50 transition-colors"
+            disabled={loading}
+          >
+            Cancel
+          </button>
         </div>
       </form>
+      <ConfirmModal
+        isOpen={isConfirmResetOpen}
+        onClose={() => setIsConfirmResetOpen(false)}
+        onConfirm={doResetPassword}
+        title="Confirm reset password"
+        message="Are you sure you want to reset your password?"
+        confirmText="Reset"
+        cancelText="Back"
+      />
+      {/* Snackbar */}
+      <Snackbar
+        isOpen={snackbar.isOpen}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={5000}
+      />
+      </div>
     </MemberLayout>
   );
 };

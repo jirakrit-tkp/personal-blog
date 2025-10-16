@@ -110,7 +110,7 @@ const MemberLayout = ({ children }) => {
       {/* Mobile Layout */}
       <div className="lg:hidden bg-stone-50 min-h-screen">
         {/* Mobile Navigation */}
-        <div className="bg-white border-b border-stone-200 px-4 py-3">
+        <div className="bg-stone-50 px-4 py-3">
           <div className="flex items-center gap-3">
             {user?.profilePic ? (
               <img
@@ -161,7 +161,7 @@ const MemberLayout = ({ children }) => {
         </div>
 
         {/* Mobile Page Content */}
-        <div className="p-4">
+        <div>
           {children}
         </div>
       </div>
