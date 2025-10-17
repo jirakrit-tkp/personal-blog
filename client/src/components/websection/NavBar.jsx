@@ -70,7 +70,7 @@ const NavBar = () => {
                 {user?.role === 'admin' && (
                   <DropdownMenuItem 
                     className="hover:bg-stone-100 cursor-pointer"
-                    onClick={() => navigate("/admin")}
+                    onClick={() => navigate("/admin/articles")}
                   >
                     <PanelsTopLeft className="w-4 h-4 mr-2" />
                     <span className="text-stone-800">Admin Panel</span>
