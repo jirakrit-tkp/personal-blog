@@ -10,7 +10,6 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
 import NotificationBell from '../NotificationBell';
-import AdminNotificationBell from '../AdminNotificationBell';
 
 const NavBar = () => {
   const { isAuthenticated, state, logout } = useAuth();
@@ -32,7 +31,7 @@ const NavBar = () => {
           // Authenticated state
           <div className="flex items-center space-x-6">
             {/* Notifications */}
-            {user?.role === 'admin' ? <AdminNotificationBell /> : <NotificationBell />}
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100">
@@ -129,7 +128,7 @@ const NavBar = () => {
                       {user?.username || user?.name || 'User'}
                     </span>
                     <div className="ml-auto">
-                      {user?.role === 'admin' ? <AdminNotificationBell /> : <NotificationBell />}
+                      <NotificationBell />
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-stone-300" />

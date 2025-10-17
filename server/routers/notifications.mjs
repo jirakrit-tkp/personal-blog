@@ -12,6 +12,9 @@ router.get("/", async (req, res) => {
   try {
     const userId = req.user.id; // จาก middleware protectUser
     
+    console.log('🔍 [Backend] Fetching notifications for userId:', userId);
+    console.log('🔍 [Backend] User email:', req.user.email);
+    
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -20,6 +23,8 @@ router.get("/", async (req, res) => {
       .limit(50);
     
     if (error) throw error;
+    
+    console.log('📊 [Backend] Found', data?.length || 0, 'notifications for user:', userId);
     
     res.json({ notifications: data });
   } catch (error) {

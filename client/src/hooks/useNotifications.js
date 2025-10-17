@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import axios from 'axios';
 
@@ -9,33 +9,42 @@ export const useNotifications = (userId) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // ดึง notifications
-  const fetchNotifications = async () => {
+  // ดึง notifications (for manual refresh)
+  const fetchNotifications = useCallback(async () => {
+    if (!userId) return;
+    
     try {
       const token = localStorage.getItem('token');
+      console.log('📡 Fetching notifications from API...');
       const response = await axios.get(`${apiBase}/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setNotifications(response.data.notifications);
+      console.log('📥 API Response:', response.data);
+      console.log('📊 Notifications count:', response.data.notifications?.length || 0);
+      setNotifications(response.data.notifications || []);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
+      console.error('❌ Error fetching notifications:', error);
+      setNotifications([]);
     }
-  };
+  }, [userId]);
 
-  // ดึง unread count
-  const fetchUnreadCount = async () => {
+  // ดึง unread count (for manual refresh)
+  const fetchUnreadCount = useCallback(async () => {
+    if (!userId) return;
+    
     try {
       const token = localStorage.getItem('token');
+      console.log('🔢 Fetching unread count from API...');
       const response = await axios.get(`${apiBase}/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('🔢 Unread count:', response.data.count || 0);
       setUnreadCount(response.data.count || 0);
     } catch (error) {
-      console.error('Error fetching unread count:', error);
+      console.error('❌ Error fetching unread count:', error);
+      setUnreadCount(0);
     }
-  };
+  }, [userId]);
 
   // Mark as read
   const markAsRead = async (notificationId) => {
@@ -87,25 +96,42 @@ export const useNotifications = (userId) => {
 
   // Setup Realtime listener
   useEffect(() => {
+    console.log('🔔 useNotifications - userId:', userId);
+    
     if (!userId) {
+      console.log('⚠️ No userId, setting loading to false');
+      setLoading(false);
       return;
     }
 
-    // ดึงข้อมูลครั้งแรก
-    fetchNotifications();
-    fetchUnreadCount();
+    let isMounted = true;
+
+    // Fetch data แบบ sequential
+    const loadData = async () => {
+      try {
+        console.log('📡 Starting to load notifications for userId:', userId);
+        setLoading(true);
+        await fetchNotifications();
+        await fetchUnreadCount();
+        console.log('✅ Finished loading notifications');
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadData();
 
     // Setup Supabase session จาก JWT token และ subscribe Realtime
     let channel = null;
-    let isMounted = true;
     
     const setupRealtime = async () => {
+      if (!isMounted) return;
       const token = localStorage.getItem('token');
       if (token) {
         await setSupabaseSession(token);
       }
-
-      if (!isMounted) return;
 
       // ฟังการเปลี่ยนแปลงแบบ real-time
       channel = supabase
@@ -151,7 +177,7 @@ export const useNotifications = (userId) => {
         supabase.removeChannel(channel);
       }
     };
-  }, [userId]);
+  }, [userId, fetchNotifications, fetchUnreadCount]);
 
   return {
     notifications,
