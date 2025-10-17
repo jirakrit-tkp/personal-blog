@@ -100,9 +100,11 @@ const CustomDropdown = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <label className="block text-base font-medium text-stone-500 mb-2">
-        {label}
-      </label>
+      {label && (
+        <label className="block text-base font-medium text-stone-500 mb-2">
+          {label}
+        </label>
+      )}
 
       {/* Dropdown Trigger */}
       <div 

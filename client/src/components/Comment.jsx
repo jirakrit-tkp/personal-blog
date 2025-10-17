@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Copy, Facebook, Linkedin, Twitter, X, Trash, Star } from 'lucide-react';
+import { Heart, Copy, Facebook, Linkedin, Twitter, X, Trash, Star, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/authentication.jsx';
 import LoginModal from './LoginModal';
@@ -21,11 +21,17 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
     <div className="border-b border-stone-200 pb-4 mb-4 last:border-b-0">
       {/* Comment Header */}
       <div className="flex items-center gap-3 mb-3">
-        <img 
-          className="w-8 h-8 rounded-full" 
-          src={comment.avatar || "https://via.placeholder.com/32x32?text=U"} 
-          alt={comment.author}
-        />
+        {comment.avatar && comment.avatar !== "https://via.placeholder.com/32x32?text=U" ? (
+          <img 
+            className="w-8 h-8 rounded-full object-cover" 
+            src={comment.avatar} 
+            alt={comment.author}
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center">
+            <User className="w-4 h-4 text-stone-400" />
+          </div>
+        )}
         <div className="flex-1">
           <h4 className="font-semibold text-stone-900 text-sm inline-flex items-center gap-2">
             <span>{comment.author}</span>
@@ -61,11 +67,17 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
             {replies.map((reply) => (
               <div key={reply.id} className="border-l-2 border-stone-200 pl-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <img 
-                    className="w-6 h-6 rounded-full" 
-                    src={reply.avatar || "https://via.placeholder.com/24x24?text=U"} 
-                    alt={reply.author}
-                  />
+                  {reply.avatar && reply.avatar !== "https://via.placeholder.com/24x24?text=U" ? (
+                    <img 
+                      className="w-6 h-6 rounded-full object-cover" 
+                      src={reply.avatar} 
+                      alt={reply.author}
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center">
+                      <User className="w-3 h-3 text-stone-400" />
+                    </div>
+                  )}
                   <h5 className="font-medium text-stone-900 text-xs inline-flex items-center gap-1">
                     <span>{reply.author}</span>
                     {typeof reply.rating === 'number' && reply.rating > 0 && (

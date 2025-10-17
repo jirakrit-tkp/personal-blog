@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { AdminNavbar } from '../../components/admin';
+import { getGenreChipClasses } from '../../lib/genreUtils';
 import { Pencil, Trash2 } from 'lucide-react';
 import CustomDropdown from '../../components/ui/CustomDropdown';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -244,7 +245,7 @@ const ArticleManagement = () => {
                           {article.genres?.map((genre, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-stone-100 text-stone-700 text-xs rounded-full"
+                              className={`px-2 py-1 text-xs rounded-full ${getGenreChipClasses(genre)}`}
                             >
                               {genre.name}
                             </span>

@@ -50,6 +50,9 @@ const FormTextarea = ({
 
     const newText = beforeText + prefix + selectedText + suffix + afterText;
     
+    // Save scroll position
+    const scrollTop = textarea.scrollTop;
+    
     // Create synthetic event for onChange
     const event = {
       target: {
@@ -59,11 +62,12 @@ const FormTextarea = ({
     };
     onChange(event);
 
-    // Set cursor position after inserted text
+    // Set cursor position after inserted text and restore scroll
     setTimeout(() => {
       textarea.focus();
       const newPosition = start + prefix.length + selectedText.length + suffix.length;
       textarea.setSelectionRange(newPosition, newPosition);
+      textarea.scrollTop = scrollTop; // Restore scroll position
     }, 0);
   };
 

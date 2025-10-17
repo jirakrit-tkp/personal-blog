@@ -43,6 +43,9 @@ router.post("/", [validateCreatePostData], async (req, res) => {
       if (genreError) throw genreError;
     }
 
+    // Notifications จะถูกสร้างอัตโนมัติผ่าน Database Trigger (notify_on_new_blog)
+    // ไม่ต้องสร้างใน Backend code อีกต่อไป
+
     return res.status(201).json({
       success: true,
       message: "Created post successfully",
@@ -81,7 +84,8 @@ router.get("/:id", [validatePostId], async (req, res) => {
         post_genres!inner(
           genres(
             id,
-            name
+            name,
+            color
           )
         )
       `)
@@ -230,7 +234,8 @@ router.get("/", async (req, res) => {
         post_genres(
           genres(
             id,
-            name
+            name,
+            color
           )
         )
       `, { count: 'exact' })
