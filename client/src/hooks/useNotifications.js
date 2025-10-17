@@ -88,11 +88,8 @@ export const useNotifications = (userId) => {
   // Setup Realtime listener
   useEffect(() => {
     if (!userId) {
-      console.log('⚠️ No userId, skipping Realtime subscription');
       return;
     }
-
-    console.log('🔔 Setting up Realtime for userId:', userId);
 
     // ดึงข้อมูลครั้งแรก
     fetchNotifications();
@@ -122,7 +119,6 @@ export const useNotifications = (userId) => {
             filter: `user_id=eq.${userId}`
           },
           (payload) => {
-            console.log('🔔 New notification received:', payload.new);
             // เพิ่ม notification ใหม่
             setNotifications(prev => [payload.new, ...prev]);
             // เพิ่ม unread count
@@ -138,22 +134,18 @@ export const useNotifications = (userId) => {
             filter: `user_id=eq.${userId}`
           },
           (payload) => {
-            console.log('🔔 Updated notification:', payload.new);
             // อัพเดท notification
             setNotifications(prev => 
               prev.map(n => n.id === payload.new.id ? payload.new : n)
             );
           }
         )
-        .subscribe((status) => {
-          console.log('🔔 Realtime subscription status:', status);
-        });
+        .subscribe();
     };
 
     setupRealtime();
 
     return () => {
-      console.log('🔔 Cleaning up Realtime subscription');
       isMounted = false;
       if (channel) {
         supabase.removeChannel(channel);

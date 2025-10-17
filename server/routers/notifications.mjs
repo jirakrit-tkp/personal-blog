@@ -12,8 +12,6 @@ router.get("/", async (req, res) => {
   try {
     const userId = req.user.id; // จาก middleware protectUser
     
-    console.log('🔔 Backend: Fetching notifications for userId:', userId);
-    
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -21,12 +19,7 @@ router.get("/", async (req, res) => {
       .order('created_at', { ascending: false })
       .limit(50);
     
-    if (error) {
-      console.error('❌ Backend: Error fetching notifications:', error);
-      throw error;
-    }
-    
-    console.log('✅ Backend: Fetched', data?.length || 0, 'notifications');
+    if (error) throw error;
     
     res.json({ notifications: data });
   } catch (error) {

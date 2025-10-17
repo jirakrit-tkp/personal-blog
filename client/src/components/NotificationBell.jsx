@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, User } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../context/authentication.jsx';
 
 const NotificationBell = () => {
   const { state } = useAuth();
   const userId = state?.user?.id;
-  
-  console.log('🔔 NotificationBell mounted, isAuthenticated:', state?.isAuthenticated, 'userId:', userId);
   
   const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications(userId);
   const [isOpen, setIsOpen] = useState(false);
@@ -40,31 +38,22 @@ const NotificationBell = () => {
     deleteNotification(notificationId);
   };
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'new_blog': return '📝';
-      case 'comment': return '💬';
-      case 'comment_reply': return '💬';
-      case 'like': return '❤️';
-      case 'rate': return '⭐';
-      default: return '🔔';
-    }
-  };
-
   const getNotificationMessage = (notification) => {
+    const actorName = <strong>{notification.actor_name}</strong>;
+    
     switch (notification.type) {
       case 'new_blog':
-        return `${notification.actor_name} Published new article.`;
+        return <>{actorName} published new article.</>;
       case 'comment':
-        return `${notification.actor_name} Comment on the article you have commented on.`;
+        return <>{actorName} commented on the article you have commented on.</>;
       case 'comment_reply':
-        return `${notification.actor_name} Comment on the article you have commented on.`;
+        return <>{actorName} commented on the article you have commented on.</>;
       case 'like':
-        return `${notification.actor_name} liked your article.`;
+        return <>{actorName} liked your article.</>;
       case 'rate':
-        return `${notification.actor_name} rated your article.`;
+        return <>{actorName} rated your article.</>;
       default:
-        return notification.message || 'มีแจ้งเตือนใหม่';
+        return notification.message || 'You have a new notification';
     }
   };
 
@@ -88,7 +77,7 @@ const NotificationBell = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-6 w-80 bg-stone-50 rounded-md shadow-md border border-stone-200 z-50 max-h-96 overflow-y-auto p-1">
+        <div className="absolute right-0 mt-6 w-80 bg-stone-200 rounded-md shadow-md border border-stone-200 z-50 max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-stone-500">
               <Bell className="w-12 h-12 mx-auto mb-2 text-stone-300" />
@@ -100,20 +89,28 @@ const NotificationBell = () => {
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`px-2 py-1.5 hover:bg-stone-100 cursor-pointer transition-colors rounded-sm ${
-                    !notification.read ? 'bg-blue-50' : ''
+                  className={`px-2 py-1.5 hover:bg-stone-200 cursor-pointer transition-colors ${
+                    !notification.read ? 'bg-stone-50' : ''
                   }`}
                 >
                   <div className="flex items-start gap-2">
                     {/* Profile Picture */}
-                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg">{getNotificationIcon(notification.type)}</span>
+                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {notification.actor_profile_pic ? (
+                        <img 
+                          src={notification.actor_profile_pic} 
+                          alt={notification.actor_name || 'User'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-stone-400" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-stone-800">
                         {getNotificationMessage(notification)}
                       </p>
-                      <p className="text-xs text-stone-500 mt-1">
+                      <p className="text-xs text-orange-300 mt-1">
                         {new Date(notification.created_at).toLocaleString('en-US', {
                           year: 'numeric',
                           month: 'long',
