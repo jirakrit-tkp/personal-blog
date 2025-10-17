@@ -19,7 +19,10 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { persistSession: false }
+  auth: { 
+    persistSession: false,
+    autoRefreshToken: false
+  }
 });
 
 export default supabase;

@@ -3,6 +3,7 @@ import postsRouter from "./posts.mjs";
 import profilesRouter from "./profiles.mjs";
 import authRouter from "./auth.mjs";
 import genresRouter from "./genres.mjs";
+import notificationsRouter from "./notifications.mjs";
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use("/posts", postsRouter);
 router.use("/profiles", profilesRouter);
 router.use("/auth", authRouter);
 router.use("/genres", genresRouter);
+router.use("/notifications", notificationsRouter);
 
 export default router;

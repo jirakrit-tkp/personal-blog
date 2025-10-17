@@ -1,4 +1,4 @@
-import { AlignJustify, Bell, ChevronDown, User, RotateCcw, LogOut, PanelsTopLeft } from 'lucide-react';
+import { AlignJustify, ChevronDown, User, RotateCcw, LogOut, PanelsTopLeft } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
+import NotificationBell from '../NotificationBell';
 
 const NavBar = () => {
   const { isAuthenticated, state, logout } = useAuth();
@@ -28,16 +29,9 @@ const NavBar = () => {
       <div className="flex items-center space-x-[8px] max-sm:hidden">
         {isAuthenticated ? (
           // Authenticated state
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-6">
             {/* Notifications */}
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative grid place-items-center w-9 h-9 rounded-full border border-stone-200 bg-white text-stone-700 hover:bg-stone-100"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full" aria-hidden="true"></span>
-            </button>
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100">
@@ -133,14 +127,9 @@ const NavBar = () => {
                     <span className="text-stone-800 font-medium">
                       {user?.username || user?.name || 'User'}
                     </span>
-                    <button
-                      type="button"
-                      aria-label="Notifications"
-                      className="ml-auto relative grid place-items-center w-8 h-8 rounded-full border border-stone-200 bg-white text-stone-700 hover:bg-stone-100"
-                    >
-                      <Bell className="w-4 h-4" />
-                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-rose-500 rounded-full" aria-hidden="true"></span>
-                    </button>
+                    <div className="ml-auto">
+                      <NotificationBell />
+                    </div>
                   </div>
                   <DropdownMenuSeparator className="bg-stone-300" />
                   <DropdownMenuItem 

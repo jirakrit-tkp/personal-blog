@@ -2,11 +2,14 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FileText, Folder, User, Bell, Lock, ExternalLink, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/authentication.jsx';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, state } = useAuth();
+  const userId = state?.user?.id;
+  const { unreadCount } = useNotifications(userId);
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -35,7 +38,16 @@ const AdminSidebar = () => {
       id: 'notifications',
       label: 'Notification',
       path: '/admin/notifications',
-      icon: <Bell className="w-5 h-5" />
+      icon: (
+        <div className="relative inline-flex">
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-2.5 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
+      )
     },
     {
       id: 'reset-password',
