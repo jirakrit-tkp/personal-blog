@@ -15,6 +15,11 @@ function Post({ post, loading }) {
   const [userRating, setUserRating] = useState(null); // 0-10 scale
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [pendingStars, setPendingStars] = useState(0); // 0-5
+  const [postScores, setPostScores] = useState({
+    imhb_score: post?.imhb_score,
+    rotten_potatoes: post?.rotten_potatoes,
+    voters_count: post?.voters_count
+  });
   const { isAuthenticated, state } = useAuth();
   const navigate = useNavigate();
 
@@ -54,6 +59,77 @@ function Post({ post, loading }) {
       if (!error && data) setUserRating(data.rating || 0);
     };
     loadMyRating();
+  }, [post?.id, state?.user?.id]);
+
+  // Update postScores when post prop changes
+  useEffect(() => {
+    setPostScores({
+      imhb_score: post?.imhb_score,
+      rotten_potatoes: post?.rotten_potatoes,
+      voters_count: post?.voters_count
+    });
+  }, [post?.imhb_score, post?.rotten_potatoes, post?.voters_count]);
+
+  // Realtime subscription for post scores changes
+  useEffect(() => {
+    if (!post?.id) return;
+
+    const channel = supabase
+      .channel(`post-${post.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'posts',
+          filter: `id=eq.${post.id}`
+        },
+        (payload) => {
+          // Update scores from the posts table directly
+          if (payload.new) {
+            setPostScores({
+              imhb_score: payload.new.imhb_score,
+              rotten_potatoes: payload.new.rotten_potatoes,
+              voters_count: payload.new.voters_count
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [post?.id]);
+
+  // Realtime subscription for user's own rating changes
+  useEffect(() => {
+    if (!post?.id || !state?.user?.id) return;
+
+    const channel = supabase
+      .channel(`post-ratings-user-${post.id}-${state.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'post_ratings',
+          filter: `post_id=eq.${post.id}`
+        },
+        (payload) => {
+          // Update user's rating if it's their own
+          if (payload.new && payload.new.user_id === state.user.id) {
+            setUserRating(payload.new.rating || 0);
+          } else if (payload.eventType === 'DELETE' && payload.old && payload.old.user_id === state.user.id) {
+            setUserRating(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [post?.id, state?.user?.id]);
 
   const openRatingModal = () => {
@@ -157,7 +233,7 @@ function Post({ post, loading }) {
                         <span className="text-xs font-medium text-stone-600">IMHb RATING</span>
                         <div className="flex items-center gap-2 mt-1">
                           <Star className="w-6 h-6 text-yellow-400 fill-current" />
-                          <span className="text-2xl font-bold text-stone-900">{post.imhb_score}/10</span>
+                          <span className="text-2xl font-bold text-stone-900">{postScores.imhb_score}/10</span>
                         </div>
                       </div>
                     </div>
@@ -170,9 +246,9 @@ function Post({ post, loading }) {
                       <div className="flex flex-col">
                         <span className="text-xs font-medium text-stone-600">Rotten Bananas</span>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-2xl font-bold text-stone-900">{post.rotten_potatoes}%</span>
+                          <span className="text-2xl font-bold text-stone-900">{Math.round(postScores.rotten_potatoes)}%</span>
                           <div className="w-6 h-6">
-                            {post.rotten_potatoes >= 60 ? (
+                            {postScores.rotten_potatoes >= 60 ? (
                               <img src="/banana.svg" alt="Banana" className="w-full h-full" />
                             ) : (
                               <img src="/worm.svg" alt="Worm" className="w-full h-full" />
@@ -183,7 +259,7 @@ function Post({ post, loading }) {
                     </div>
 
                     {/* Voters Count */}
-                    <span className="text-xs text-stone-500">({post.voters_count || "XX"} Voters)</span>
+                    <span className="text-xs text-stone-500">({postScores.voters_count || "XX"} Voters)</span>
                   </div>
 
                   {/* Right Side - YOUR RATING */}
@@ -219,7 +295,7 @@ function Post({ post, loading }) {
                         <span className="text-xs font-medium text-stone-600">IMHb RATING</span>
                         <div className="flex items-center gap-2 mt-1">
                           <Star className="w-6 h-6 text-yellow-400 fill-current" />
-                          <span className="text-2xl font-bold text-stone-900">{post.imhb_score}/10</span>
+                          <span className="text-2xl font-bold text-stone-900">{postScores.imhb_score}/10</span>
                         </div>
                       </div>
                     </div>
@@ -232,9 +308,9 @@ function Post({ post, loading }) {
                       <div className="flex flex-col items-center">
                         <span className="text-xs font-medium text-stone-600">Rotten Bananas</span>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-2xl font-bold text-stone-900">{post.rotten_potatoes}%</span>
+                          <span className="text-2xl font-bold text-stone-900">{Math.round(postScores.rotten_potatoes)}%</span>
                           <div className="w-6 h-6">
-                            {post.rotten_potatoes >= 60 ? (
+                            {postScores.rotten_potatoes >= 60 ? (
                               <img src="/banana.svg" alt="Banana" className="w-full h-full" />
                             ) : (
                               <img src="/worm.svg" alt="Worm" className="w-full h-full" />
@@ -247,7 +323,7 @@ function Post({ post, loading }) {
 
                   {/* Middle Row - Voters Count */}
                   <div className="flex items-center justify-center -mt-4">
-                    <span className="text-xs text-stone-500">({post.voters_count || "XX"} Voters)</span>
+                    <span className="text-xs text-stone-500">({postScores.voters_count || "XX"} Voters)</span>
                   </div>
 
                   {/* Bottom Row - YOUR RATING */}
