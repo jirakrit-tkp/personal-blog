@@ -3,7 +3,7 @@ import { useApi } from './useApi';
 import { usePagination } from './usePagination';
 import { useSearch } from './useSearch';
 
-export const useArticles = () => {
+export const useArticles = (shouldLoad = true) => {
     const [articles, setArticles] = useState([]);
     const [categories, setCategories] = useState(['Highlight']);
     const [categoriesLoaded, setCategoriesLoaded] = useState(false);
@@ -77,16 +77,18 @@ export const useArticles = () => {
 
     // Reset articles when filter or search changes
     useEffect(() => {
+        if (!shouldLoad) return;
         resetPagination();
         loadArticles();
-    }, [selectedFilter, searchKeyword, postsPerPage]);
+    }, [selectedFilter, searchKeyword, postsPerPage, shouldLoad]);
 
     // Load more when page changes
     useEffect(() => {
+        if (!shouldLoad) return;
         if (currentPage > 1) {
             loadArticles(true);
         }
-    }, [currentPage]);
+    }, [currentPage, shouldLoad]);
 
     // Load categories from API (only once)
     const loadCategories = async () => {
@@ -111,9 +113,10 @@ export const useArticles = () => {
 
     // Initial load
     useEffect(() => {
+        if (!shouldLoad) return;
         loadCategories(); // โหลด categories ก่อน
         loadArticles();
-    }, []);
+    }, [shouldLoad]);
 
     return {
         articles,
