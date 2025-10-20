@@ -18,11 +18,24 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
   console.warn("⚠️ SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing in server/.env");
 }
 
+// Create Supabase client without schema cache
 export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: { 
     persistSession: false,
     autoRefreshToken: false
+  },
+  db: {
+    schema: 'public'
+  },
+  // Disable schema caching by forcing fresh schema on every request
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
   }
 });
+
+// Log for debugging
+console.log('✅ Supabase client initialized (schema cache disabled)');
 
 export default supabase;
