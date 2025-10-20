@@ -7,6 +7,7 @@ export const useArticles = (shouldLoad = true) => {
     const [articles, setArticles] = useState([]);
     const [categories, setCategories] = useState(['Highlight']);
     const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+    const [lastFetchTime, setLastFetchTime] = useState(0);
     
     const { loading, loadingMore, error, fetchPosts } = useApi();
     const { 
@@ -39,8 +40,15 @@ export const useArticles = (shouldLoad = true) => {
         return ['Highlight', ...Array.from(uniqueGenres)];
     };
 
-    // Load articles
+    // Load articles with throttling
     const loadArticles = async (isLoadMore = false) => {
+        // Throttle to 1 request per second
+        const now = Date.now();
+        if (now - lastFetchTime < 1000 && !isLoadMore) {
+            return;
+        }
+        setLastFetchTime(now);
+        
         try {
             const params = {
                 category: selectedFilter,

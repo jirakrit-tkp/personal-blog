@@ -21,39 +21,28 @@ const ArticleManagement = () => {
   const [articleToDelete, setArticleToDelete] = useState(null);
   const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' });
 
-  // Fetch genres from database
+  // Fetch genres and articles from database (batched)
   useEffect(() => {
-    const fetchGenres = async () => {
+    const loadData = async () => {
       try {
         const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
-        const response = await fetch(`${apiBase}/genres`);
-        const data = await response.json();
-        if (data.success) {
-          setGenres(data.data.map(genre => genre.name));
+        
+        // Batch both API calls
+        const [genresResult, articlesResult] = await Promise.all([
+          fetch(`${apiBase}/genres`).then(r => r.json()),
+          fetchAdminPosts({ page: 1, limit: 50 })
+        ]);
+        
+        if (genresResult.success) {
+          setGenres(genresResult.data.map(genre => genre.name));
         }
+        setArticles(articlesResult.data || []);
       } catch (error) {
-        console.error('Failed to load genres:', error);
+        console.error('Failed to load data:', error);
       }
     };
     
-    fetchGenres();
-  }, []);
-
-  // Fetch articles from database (including drafts)
-  useEffect(() => {
-    const loadArticles = async () => {
-      try {
-        const result = await fetchAdminPosts({
-          page: 1,
-          limit: 50
-        });
-        setArticles(result.data || []);
-      } catch (error) {
-        console.error('Failed to load articles:', error);
-      }
-    };
-    
-    loadArticles();
+    loadData();
   }, []);
 
   const handleSelectArticle = (articleId) => {

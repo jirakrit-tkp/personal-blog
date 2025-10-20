@@ -19,37 +19,73 @@ function AuthProvider(props) {
 
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
 
-  // Fetch notifications
+  // Fetch notifications with caching
   const fetchNotifications = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
+
+    // Check cache first
+    const cacheKey = `notifications-${state.user?.id}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < 30000) { // 30s cache
+        setNotifications(data);
+        return;
+      }
+    }
 
     try {
       const response = await axios.get(`${apiBase}/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setNotifications(response.data.notifications || []);
+      const notifications = response.data.notifications || [];
+      setNotifications(notifications);
+      
+      // Cache the result
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: notifications,
+        timestamp: Date.now()
+      }));
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
     }
-  }, [apiBase]);
+  }, [apiBase, state.user?.id]);
 
-  // Fetch unread count
+  // Fetch unread count with caching
   const fetchUnreadCount = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
+
+    // Check cache first
+    const cacheKey = `unread-count-${state.user?.id}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      const { count, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < 30000) { // 30s cache
+        setUnreadCount(count);
+        return;
+      }
+    }
 
     try {
       const response = await axios.get(`${apiBase}/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUnreadCount(response.data.count || 0);
+      const count = response.data.count || 0;
+      setUnreadCount(count);
+      
+      // Cache the result
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        count,
+        timestamp: Date.now()
+      }));
     } catch (error) {
       console.error('Error fetching unread count:', error);
       setUnreadCount(0);
     }
-  }, [apiBase]);
+  }, [apiBase, state.user?.id]);
 
   // Load notifications data
   const loadNotifications = useCallback(async () => {
@@ -129,19 +165,20 @@ function AuthProvider(props) {
       setNotifications([]);
       setUnreadCount(0);
     }
-  }, [state.user, loadNotifications]);
+  }, [state.user?.id, loadNotifications]);
 
   // Setup Supabase realtime for notifications
   useEffect(() => {
     if (!state.user?.id) return;
 
+    let channel;
     const setupRealtime = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         await setSupabaseSession(token);
       }
 
-      const channel = supabase
+      channel = supabase
         .channel(`notifications-${state.user.id}`)
         .on(
           'postgres_changes',
@@ -171,14 +208,16 @@ function AuthProvider(props) {
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     };
 
     setupRealtime();
-  }, [state.user]);
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [state.user?.id]);
 
 
   const login = async (data, navigate) => {
