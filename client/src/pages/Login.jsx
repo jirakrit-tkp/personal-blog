@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { NavBar, Footer } from '../components/websection';
 import { useAuth } from '../context/authentication.jsx';
 import Snackbar from '../components/ui/Snackbar';
@@ -13,6 +14,7 @@ function Login() {
     password: ''
   });
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
   const [snackbar, setSnackbar] = useState({
     isOpen: false,
     message: '',
@@ -126,19 +128,32 @@ function Login() {
                 <label htmlFor="password" className={`block text-sm font-medium mb-2 ${errors.password ? 'text-red-600' : 'text-stone-700'}`}>
                   Password
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Password"
-                  className={`w-full px-4 py-3 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.password 
-                      ? 'border-red-500 text-red-600 focus:ring-red-500' 
-                      : 'border-stone-300 focus:ring-blue-500'
-                  }`}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Password"
+                    className={`w-full px-4 py-3 pr-12 border bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
+                      errors.password 
+                        ? 'border-red-500 text-red-600 focus:ring-red-500' 
+                        : 'border-stone-300 focus:ring-blue-500'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onPointerDown={() => setShowPassword(true)}
+                    onPointerUp={() => setShowPassword(false)}
+                    onPointerLeave={() => setShowPassword(false)}
+                    onPointerCancel={() => setShowPassword(false)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                 )}
