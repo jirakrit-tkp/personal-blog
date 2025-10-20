@@ -1,14 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
-import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../context/authentication.jsx';
 import NotificationItem from './NotificationItem';
 
-const NotificationBell = () => {
-  const { state } = useAuth();
-  const userId = state?.user?.id;
-  
-  const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications(userId);
+const NotificationBell = ({ inMobileMenu = false, onBellClick = null, showContentOnly = false }) => {
+  const { notifications, unreadCount, markAsRead, deleteNotification } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -36,6 +32,52 @@ const NotificationBell = () => {
 
   NotificationBell.displayName = "NotificationBell";
 
+  // Show only notification content (for mobile menu)
+  if (showContentOnly) {
+    return (
+      <>
+        {notifications.length === 0 ? (
+          <div className="p-8 text-center text-stone-500">
+            <Bell className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+            <p>No notifications</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-stone-200">
+            {notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onClick={handleNotificationClick}
+                onDelete={deleteNotification}
+                onMarkAsRead={markAsRead}
+                compact={true}
+              />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // In mobile menu - just show icon without dropdown
+  if (inMobileMenu) {
+    return (
+      <button
+        onClick={onBellClick}
+        className="relative p-2 text-stone-600 hover:text-stone-800 transition-colors"
+        aria-label="Notifications"
+      >
+        <Bell className="w-6 h-6" />
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+    );
+  }
+
+  // Default: show icon with dropdown (for desktop)
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Bell Icon */}
@@ -54,7 +96,7 @@ const NotificationBell = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-6 w-80 bg-stone-200 rounded-md shadow-md border border-stone-200 z-50 max-h-96 overflow-y-auto">
+        <div className="absolute right-0 mt-6 w-80 bg-stone-50 rounded-md shadow-md border border-stone-200 z-50 max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-stone-500">
               <Bell className="w-12 h-12 mx-auto mb-2 text-stone-300" />
@@ -68,6 +110,7 @@ const NotificationBell = () => {
                   notification={notification}
                   onClick={handleNotificationClick}
                   onDelete={deleteNotification}
+                  onMarkAsRead={markAsRead}
                   compact={true}
                 />
               ))}

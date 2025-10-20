@@ -2,14 +2,11 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FileText, Folder, User, Bell, Lock, ExternalLink, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/authentication.jsx';
-import { useNotifications } from '../../hooks/useNotifications';
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, state } = useAuth();
-  const userId = state?.user?.id;
-  const { unreadCount } = useNotifications(userId);
+  const { logout, unreadCount } = useAuth();
 
   const isActive = (path) => {
     return location.pathname === path;

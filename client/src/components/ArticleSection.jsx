@@ -8,7 +8,7 @@ import { useArticles } from '@/hooks/useArticles';
 import SearchComponent from './Search';
 import CustomDropdown from './ui/CustomDropdown.jsx';
 
-function ArticleSection() {
+const ArticleSection = ({ shouldLoad = true }) => {
     const filterScrollRef = useRef(null);
     const scrollFilters = (dx) => {
         if (filterScrollRef.current) {
@@ -26,7 +26,7 @@ function ArticleSection() {
         updateFilter,
         updateSearchKeyword,
         loadMoreArticles
-    } = useArticles();
+    } = useArticles(shouldLoad);
     
     return (
         <section className="py-12 px-8">
@@ -114,7 +114,7 @@ function ArticleSection() {
                     </div>
 
                     {/* Posts Grid */}
-                    {loading ? (
+                    {loading || !shouldLoad ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {[...Array(4)].map((_, index) => (
                                 <LoadingCard key={index} />
@@ -164,7 +164,9 @@ function ArticleSection() {
     )
 }
 
-function BlogCard(props) {
+ArticleSection.displayName = 'ArticleSection'
+
+const BlogCard = (props) => {
     // Handle genres array from post_genres relationship
     const genres = props.genres || [];
     const primaryGenre = genres.length > 0 ? genres[0].name : 'Uncategorized';
@@ -220,7 +222,9 @@ function BlogCard(props) {
       );
 }
 
-function LoadingCard() {
+BlogCard.displayName = 'BlogCard'
+
+const LoadingCard = () => {
     return (
         <div className="flex flex-col gap-4 animate-pulse">
             {/* Image skeleton */}
@@ -255,5 +259,7 @@ function LoadingCard() {
         </div>
     );
 }
+
+LoadingCard.displayName = 'LoadingCard'
 
 export default ArticleSection

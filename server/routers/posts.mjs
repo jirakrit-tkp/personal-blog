@@ -9,29 +9,34 @@ router.post("/", [validateCreatePostData], async (req, res) => {
   const { title, image, genre_ids, description, content, status_id, author_id } = req.body;
   
   try {
+    // Build post object with only provided fields
+    const postData = {
+      title: title.trim(),
+      status_id: parseInt(status_id),
+      author_id: author_id,
+      created_at: new Date(),
+      updated_at: new Date(),
+      likes_count: 0
+    };
+    
+    // Add optional fields only if provided (for draft support)
+    if (image) postData.image = image.trim();
+    if (description) postData.description = description.trim();
+    if (content) postData.content = content.trim();
+    
     // Insert post first
-    const { data: postData, error: postError } = await supabase
+    const { data: newPost, error: postError } = await supabase
       .from('posts')
-      .insert({
-        title: title.trim(),
-        image: image.trim(),
-        description: description.trim(),
-        content: content.trim(),
-        status_id: parseInt(status_id),
-        author_id: author_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        likes_count: 0
-      })
+      .insert(postData)
       .select('id')
       .single();
 
     if (postError) throw postError;
 
-    // Insert post_genres relationships
+    // Insert post_genres relationships (only if genres provided)
     if (genre_ids && genre_ids.length > 0) {
       const postGenres = genre_ids.map(genre_id => ({
-        post_id: postData.id,
+        post_id: newPost.id,
         genre_id: parseInt(genre_id),
         created_at: new Date()
       }));
@@ -49,7 +54,7 @@ router.post("/", [validateCreatePostData], async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Created post successfully",
-      data: { id: postData.id, title: title.trim() }
+      data: { id: newPost.id, title: title.trim() }
     });
 
   } catch (error) {
@@ -67,7 +72,7 @@ router.get("/:id", [validatePostId], async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Get post with genres and author
+    // Get post with genres and author (LEFT JOIN for genres to support drafts without genres)
     const { data: post, error } = await supabase
       .from('posts')
       .select(`
@@ -81,7 +86,7 @@ router.get("/:id", [validatePostId], async (req, res) => {
           name,
           profile_pic
         ),
-        post_genres!inner(
+        post_genres(
           genres(
             id,
             name,
@@ -100,11 +105,11 @@ router.get("/:id", [validatePostId], async (req, res) => {
       });
     }
     
-    // Transform genres data
+    // Transform genres data (handle empty genres for drafts)
     const transformedPost = {
       ...post,
       status: post.statuses?.status || 'Draft',
-      genres: post.post_genres?.map(pg => pg.genres) || [],
+      genres: post.post_genres?.map(pg => pg.genres).filter(Boolean) || [],
       author: post.users ? { id: post.users.id, name: post.users.name, profile_pic: post.users.profile_pic } : null
     };
     delete transformedPost.post_genres;
@@ -129,7 +134,7 @@ router.get("/:id", [validatePostId], async (req, res) => {
 // PUT update post
 router.put("/:id", [validatePostId, validateUpdatePostData], async (req, res) => {
   const { id } = req.params;
-  const { title, image, category_id, description, content, status_id } = req.body;
+  const { title, image, genre_ids, description, content, status_id } = req.body;
   
   try {
     // ตรวจสอบว่ามี post
@@ -142,12 +147,42 @@ router.put("/:id", [validatePostId, validateUpdatePostData], async (req, res) =>
       });
     }
     
+    // Build update object with only provided fields
+    const updateData = { updated_at: new Date() };
+    if (title !== undefined) updateData.title = title;
+    if (image !== undefined) updateData.image = image;
+    if (description !== undefined) updateData.description = description;
+    if (content !== undefined) updateData.content = content;
+    if (status_id !== undefined) updateData.status_id = status_id;
+    
+    // Update post
     const { data: updatedRows, error } = await supabase
       .from('posts')
-      .update({ title, image, category_id, description, content, status_id, updated_at: new Date() })
+      .update(updateData)
       .eq('id', id)
       .select('*');
     if (error) throw error;
+    
+    // Update genres if provided
+    if (genre_ids !== undefined) {
+      // Delete existing genres
+      await supabase.from('post_genres').delete().eq('post_id', id);
+      
+      // Insert new genres
+      if (genre_ids.length > 0) {
+        const postGenres = genre_ids.map(genre_id => ({
+          post_id: id,
+          genre_id: parseInt(genre_id),
+          created_at: new Date()
+        }));
+        
+        const { error: genreError } = await supabase
+          .from('post_genres')
+          .insert(postGenres);
+        
+        if (genreError) throw genreError;
+      }
+    }
     
     return res.status(200).json({
       success: true,
@@ -199,7 +234,83 @@ router.delete("/:id", [validatePostId], async (req, res) => {
   }
 });
 
-// GET all posts with query parameters
+// GET all posts for admin (includes drafts)
+router.get("/admin/all", async (req, res) => {
+  const { page = 1, limit = 50 } = req.query;
+  
+  // Validate parameters
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  
+  if (pageNum < 1 || limitNum < 1) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid page or limit parameter"
+    });
+  }
+  
+  try {
+    // Build supabase query with genres - NO status filter for admin
+    const from = (pageNum - 1) * limitNum;
+    const to = from + limitNum - 1;
+    let query = supabase
+      .from('posts')
+      .select(`
+        *,
+        statuses(
+          id,
+          status
+        ),
+        users:author_id(
+          id,
+          name,
+          profile_pic
+        ),
+        post_genres(
+          genres(
+            id,
+            name,
+            color
+          )
+        )
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    const { data, count, error } = await query;
+    if (error) throw error;
+
+    // Transform posts data to include genres
+    const transformedPosts = (data || []).map(post => ({
+      ...post,
+      status: post.statuses?.status || 'Draft',
+      genres: post.post_genres?.map(pg => pg.genres) || [],
+      author: post.users ? { id: post.users.id, name: post.users.name, profile_pic: post.users.profile_pic } : null
+    })).map(({ post_genres, statuses, users, ...post }) => post);
+
+    const totalPosts = count || 0;
+    const totalPages = Math.ceil(totalPosts / limitNum) || 1;
+
+    return res.status(200).json({
+      totalPosts,
+      totalPages,
+      currentPage: pageNum,
+      limit: limitNum,
+      posts: transformedPosts,
+      nextPage: pageNum < totalPages ? pageNum + 1 : null
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Server could not fetch posts because database connection failed",
+      message: error.message
+    });
+  }
+});
+
+// GET all posts with query parameters (only published posts)
 router.get("/", async (req, res) => {
   const { page = 1, limit = 6, category, keyword } = req.query;
   
@@ -239,6 +350,7 @@ router.get("/", async (req, res) => {
           )
         )
       `, { count: 'exact' })
+      .eq('status_id', 2) // Only published posts
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -289,6 +401,9 @@ router.post("/:postId/ratings", async (req, res) => {
   const { postId } = req.params;
   const { rating, user_id } = req.body;
   
+  // DEBUG: Log postId type
+  console.log('🔍 Rating submit - postId:', postId, 'type:', typeof postId);
+  
   try {
     // Validate input
     if (!rating || !user_id) {
@@ -333,11 +448,11 @@ router.post("/:postId/ratings", async (req, res) => {
       });
     }
     
-    // Insert rating (UPSERT - update if exists, insert if not)
+    // UPSERT rating (trigger fixed, can use .upsert() now)
     const { data: ratingData, error: ratingError } = await supabase
       .from('post_ratings')
       .upsert({
-        post_id: parseInt(postId),
+        post_id: postId,
         user_id: user_id,
         rating: parseFloat(rating)
       }, {
@@ -346,13 +461,15 @@ router.post("/:postId/ratings", async (req, res) => {
       .select('*');
     
     if (ratingError) {
-      console.error("Rating insert error:", ratingError);
+      console.error("❌ Rating upsert error:", ratingError);
       return res.status(500).json({
         success: false,
         error: "Failed to save rating",
         message: ratingError.message
       });
     }
+    
+    console.log('✅ Rating saved successfully:', ratingData);
     
     return res.status(201).json({
       success: true,
@@ -407,7 +524,7 @@ router.post("/:postId/likes", async (req, res) => {
 
     const { error: likeErr } = await supabase
       .from('post_likes')
-      .insert({ post_id: parseInt(postId), user_id, created_at: new Date() });
+      .insert({ post_id: postId, user_id, created_at: new Date() }); // UUID - no parseInt needed
     if (likeErr) throw likeErr;
 
     const nextCount = (post.likes_count || 0) + 1;
