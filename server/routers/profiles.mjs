@@ -110,7 +110,7 @@ router.put("/:id", profilePictureUpload, async (req, res) => {
     const updateData = {};
     if (name) updateData.name = name;
     if (username) updateData.username = username;
-    if (email) updateData.email = email;
+    // Email is managed by auth.users, not public.users
     if (profilePicUrl) updateData.profile_pic = profilePicUrl;
     if (typeof bio === "string") updateData.bio = bio.slice(0, 500);
 

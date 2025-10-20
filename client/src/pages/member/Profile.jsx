@@ -123,7 +123,7 @@ const Profile = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('username', formData.username);
-      formDataToSend.append('email', formData.email);
+      // Email is managed by auth.users, don't update it here
       
       if (selectedFile) {
         formDataToSend.append('profilePicture', selectedFile);

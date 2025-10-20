@@ -2,6 +2,7 @@ import React from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
+import { User } from 'lucide-react';
 import NavBar from '../../components/websection/NavBar';
 import Avatar from '../ui/Avatar';
 
