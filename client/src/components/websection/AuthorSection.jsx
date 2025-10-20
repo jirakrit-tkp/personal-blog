@@ -3,7 +3,7 @@ import axios from 'axios';
 import { getMarkdownHTML } from '../../lib/markdownUtils';
 import { User } from 'lucide-react';
 
-const AuthorSection = () => {
+const AuthorSection = ({ onLoadComplete }) => {
   const [publicAdmin, setPublicAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +13,11 @@ const AuthorSection = () => {
       try {
         const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
         const adminId = import.meta.env.VITE_PUBLIC_ADMIN_ID; // UUID of admin user
-        if (!adminId) { setLoading(false); return; }
+        if (!adminId) { 
+          setLoading(false); 
+          if (onLoadComplete) onLoadComplete();
+          return; 
+        }
         const res = await axios.get(`${apiBase}/profiles/${adminId}`, { signal: controller.signal });
         if (res?.data?.success) {
           setPublicAdmin(res.data.data);
@@ -22,12 +26,13 @@ const AuthorSection = () => {
         // silent fail; will fallback to defaults
       } finally {
         setLoading(false);
+        if (onLoadComplete) onLoadComplete();
       }
     };
 
     fetchPublicAdmin();
     return () => controller.abort();
-  }, []);
+  }, [onLoadComplete]);
   AuthorSection.displayName = "AuthorSection";
 
   return (
