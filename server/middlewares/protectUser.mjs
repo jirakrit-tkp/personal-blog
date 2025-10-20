@@ -15,13 +15,16 @@ const protectUser = async (req, res, next) => {
 
   try {
     const { data, error } = await supabase.auth.getUser(token);
+    
     if (error || !data.user) {
+      console.log('❌ Auth failed:', error?.message);
       return res.status(401).json({ error: "Unauthorized: Invalid token" });
     }
 
     req.user = { ...data.user };
     next();
   } catch (err) {
+    console.error('❌ Middleware error:', err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

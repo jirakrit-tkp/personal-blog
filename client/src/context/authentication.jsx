@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { flushSync } from "react-dom";
 import axios from "axios";
+import { supabase, setSupabaseSession } from '../lib/supabase';
 
 const AuthContext = React.createContext();
 
@@ -12,7 +13,88 @@ function AuthProvider(props) {
     user: null,
   });
 
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api";
+
+  // Fetch notifications
+  const fetchNotifications = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await axios.get(`${apiBase}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(response.data.notifications || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setNotifications([]);
+    }
+  }, [apiBase]);
+
+  // Fetch unread count
+  const fetchUnreadCount = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await axios.get(`${apiBase}/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUnreadCount(response.data.count || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
+    }
+  }, [apiBase]);
+
+  // Load notifications data
+  const loadNotifications = useCallback(async () => {
+    if (!state.user) return;
+    
+    setNotificationsLoading(true);
+    try {
+      await Promise.all([fetchNotifications(), fetchUnreadCount()]);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [state.user, fetchNotifications, fetchUnreadCount]);
+
+  // Mark as read
+  const markAsRead = async (notificationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${apiBase}/notifications/${notificationId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications(prev =>
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  // Delete notification
+  const deleteNotification = async (notificationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${apiBase}/notifications/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      const notification = notifications.find(n => n.id === notificationId);
+      if (notification && !notification.read) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
 
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
@@ -38,6 +120,65 @@ function AuthProvider(props) {
   useEffect(() => {
     fetchUser();
   }, []);
+
+  // Load notifications when user is available
+  useEffect(() => {
+    if (state.user) {
+      loadNotifications();
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [state.user, loadNotifications]);
+
+  // Setup Supabase realtime for notifications
+  useEffect(() => {
+    if (!state.user?.id) return;
+
+    const setupRealtime = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await setSupabaseSession(token);
+      }
+
+      const channel = supabase
+        .channel(`notifications-${state.user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${state.user.id}`
+          },
+          (payload) => {
+            setNotifications(prev => [payload.new, ...prev]);
+            setUnreadCount(prev => prev + 1);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${state.user.id}`
+          },
+          (payload) => {
+            setNotifications(prev =>
+              prev.map(n => n.id === payload.new.id ? payload.new : n)
+            );
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupRealtime();
+  }, [state.user]);
 
 
   const login = async (data, navigate) => {
@@ -86,13 +227,29 @@ function AuthProvider(props) {
   const logout = () => {
     localStorage.removeItem("token");
     setState({ user: null, error: null, loading: null });
+    setNotifications([]);
+    setUnreadCount(0);
     // Redirect will be handled by component that calls logout
   };
 
   const isAuthenticated = Boolean(state.user);
 
   return (
-    <AuthContext.Provider value={{ state, login, logout, register, isAuthenticated, fetchUser }}>
+    <AuthContext.Provider value={{ 
+      state, 
+      login, 
+      logout, 
+      register, 
+      isAuthenticated, 
+      fetchUser,
+      notifications,
+      unreadCount,
+      notificationsLoading,
+      markAsRead,
+      deleteNotification,
+      fetchNotifications,
+      fetchUnreadCount
+    }}>
       {props.children}
     </AuthContext.Provider>
   );
