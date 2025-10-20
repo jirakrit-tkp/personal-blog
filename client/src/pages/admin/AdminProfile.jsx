@@ -19,7 +19,6 @@ const AdminProfile = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    email: user?.email || '',
     username: user?.username || '',
     bio: user?.bio || ''
   });
@@ -59,10 +58,6 @@ const AdminProfile = () => {
       errors.name = 'Name is required';
     }
     
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    }
-    
     if (!formData.username.trim()) {
       errors.username = 'Username is required';
     }
@@ -85,7 +80,7 @@ const AdminProfile = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('username', formData.username);
-      formDataToSend.append('email', formData.email);
+      // Email is managed by auth.users, don't update it here
       formDataToSend.append('bio', formData.bio || '');
       
       if (selectedFile) {
@@ -124,7 +119,6 @@ const AdminProfile = () => {
   const handleCancel = () => {
     setFormData({
       name: user?.name || '',
-      email: user?.email || '',
       username: user?.username || '',
       bio: user?.bio || ''
     });
@@ -245,12 +239,12 @@ const AdminProfile = () => {
             label="Email"
             type="email"
             name="email"
-            value={isEditing ? formData.email : (user?.email || 'Not set')}
+            value={user?.email || 'Not set'}
             onChange={handleInputChange}
             placeholder="Enter your email"
-            readOnly={!isEditing}
+            readOnly={true}
+            disabled={true}
             className="w-1/2"
-            hasError={!!validationErrors.email}
           />
 
           {/* Bio Field */}

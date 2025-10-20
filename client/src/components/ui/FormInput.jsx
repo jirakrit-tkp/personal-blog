@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Eye } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 const FormInput = ({ 
@@ -13,6 +15,10 @@ const FormInput = ({
   hasError = false,
   ...props 
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordType = type === 'password';
+  const inputType = isPasswordType && showPassword ? 'text' : type;
+
   const baseClasses = 'px-3 py-2 rounded-md transition-colors text-base';
   
   const stateClasses = disabled || readOnly
@@ -32,17 +38,32 @@ const FormInput = ({
           {label}
         </label>
       )}
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        readOnly={readOnly}
-        className={`${baseClasses} ${stateClasses} ${className}`}
-        {...props}
-      />
+      <div className="relative">
+        <input
+          type={inputType}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          readOnly={readOnly}
+          className={`${baseClasses} ${stateClasses} ${isPasswordType ? 'pr-10' : ''} ${className}`}
+          {...props}
+        />
+        {isPasswordType && !disabled && !readOnly && (
+          <button
+            type="button"
+            onPointerDown={() => setShowPassword(true)}
+            onPointerUp={() => setShowPassword(false)}
+            onPointerLeave={() => setShowPassword(false)}
+            onPointerCancel={() => setShowPassword(false)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
+            tabIndex={-1}
+          >
+            <Eye className="w-5 h-5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };
