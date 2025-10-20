@@ -120,7 +120,7 @@ const AdminResetPassword = () => {
         actions={
           <>
             <button 
-              className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors mr-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -129,7 +129,7 @@ const AdminResetPassword = () => {
             <button
               type="button"
               onClick={handleClickReset}
-              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               disabled={isLoading}
             >
               {isLoading ? 'Updating...' : 'Reset password'}

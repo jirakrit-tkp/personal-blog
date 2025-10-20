@@ -116,7 +116,7 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
         />
         <button
           onClick={handleSearch}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-stone-600"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer"
         >
           <SearchIcon className="w-5 h-5" />
         </button>
@@ -139,7 +139,7 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
                 <li key={index}>
                   <button
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full px-4 py-3 text-left hover:bg-stone-50 focus:bg-stone-50 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 text-left hover:bg-stone-50 focus:bg-stone-50 focus:outline-none transition-colors cursor-pointer"
                   >
                     <span className="text-stone-900">{suggestion}</span>
                   </button>

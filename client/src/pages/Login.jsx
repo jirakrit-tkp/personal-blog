@@ -1,16 +1,36 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { NavBar, Footer } from '../components/websection';
 import { useAuth } from '../context/authentication.jsx';
+import Snackbar from '../components/ui/Snackbar';
 
 function Login() {
   const { login, state } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [errors, setErrors] = useState({});
+  const [snackbar, setSnackbar] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
+
+  // Check for redirect message from signup
+  useEffect(() => {
+    if (location.state?.message) {
+      setSnackbar({
+        isOpen: true,
+        message: location.state.message,
+        type: location.state.type || 'success'
+      });
+      // Clear the location state to prevent showing the message again on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -128,7 +148,7 @@ function Login() {
               <button
                 type="submit"
                 disabled={state.loading}
-                className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {state.loading ? 'Logging in...' : 'Log in'}
               </button>
@@ -146,8 +166,19 @@ function Login() {
       </div>
 
       <Footer />
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        isOpen={snackbar.isOpen}
+        onClose={() => setSnackbar(prev => ({ ...prev, isOpen: false }))}
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={4000}
+      />
     </div>
   );
 }
+
+Login.displayName = 'Login';
 
 export default Login;

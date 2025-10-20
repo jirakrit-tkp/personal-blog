@@ -90,7 +90,7 @@ const FormTextarea = ({
             <button
               type="button"
               onClick={() => setViewMode('write')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
+              className={`px-3 py-1 text-sm rounded transition-colors cursor-pointer ${
                 viewMode === 'write'
                   ? 'bg-white border border-stone-300 text-stone-800 font-medium'
                   : 'text-stone-600 hover:text-stone-800'
@@ -101,7 +101,7 @@ const FormTextarea = ({
             <button
               type="button"
               onClick={() => setViewMode('review')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
+              className={`px-3 py-1 text-sm rounded transition-colors cursor-pointer ${
                 viewMode === 'review'
                   ? 'bg-white border border-stone-300 text-stone-800 font-medium'
                   : 'text-stone-600 hover:text-stone-800'
@@ -117,7 +117,7 @@ const FormTextarea = ({
               <button
                 type="button"
                 onClick={handleHeading}
-                className="px-3 py-1 text-sm font-semibold bg-white border border-stone-300 rounded hover:bg-stone-100 transition-colors"
+                className="px-3 py-1 text-sm font-semibold bg-white border border-stone-300 rounded hover:bg-stone-100 transition-colors cursor-pointer"
                 title="Heading"
               >
                 H
@@ -125,7 +125,7 @@ const FormTextarea = ({
               <button
                 type="button"
                 onClick={handleBold}
-                className="px-3 py-1 text-sm font-bold bg-white border border-stone-300 rounded hover:bg-stone-100 transition-colors"
+                className="px-3 py-1 text-sm font-bold bg-white border border-stone-300 rounded hover:bg-stone-100 transition-colors cursor-pointer"
                 title="Bold"
               >
                 B
@@ -133,7 +133,7 @@ const FormTextarea = ({
               <button
                 type="button"
                 onClick={handleItalic}
-                className="px-3 py-1 text-sm italic bg-white border border-stone-300 rounded hover:bg-stone-100 transition-colors"
+                className="px-3 py-1 text-sm italic bg-white border border-stone-300 rounded hover:bg-stone-100 transition-colors cursor-pointer"
                 title="Italic"
               >
                 I

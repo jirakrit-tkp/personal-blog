@@ -17,12 +17,12 @@ const GenreModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="flex items-center justify-end p-6">
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-600 transition-colors"
+            className="text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -62,7 +62,7 @@ const GenreModal = ({
                 <button
                   key={key}
                   onClick={() => onColorSelect(key)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  className={`w-8 h-8 rounded-full border-2 transition-all cursor-pointer ${
                     formData.color === key 
                       ? 'border-stone-600 ring-2 ring-stone-300' 
                       : 'border-transparent hover:border-stone-400'
@@ -77,13 +77,13 @@ const GenreModal = ({
         <div className="flex gap-3 p-6">
           <button 
             onClick={onClose} 
-            className="flex-1 px-4 py-2 border border-stone-300 text-stone-700 rounded-full hover:bg-stone-50 transition-colors"
+            className="flex-1 px-4 py-2 border border-stone-300 text-stone-700 rounded-full hover:bg-stone-50 transition-colors cursor-pointer"
           >
             {cancelText}
           </button>
           <button 
             onClick={onSubmit}
-            className="flex-1 px-4 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
+            className="flex-1 px-4 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors cursor-pointer"
           >
             {submitText}
           </button>

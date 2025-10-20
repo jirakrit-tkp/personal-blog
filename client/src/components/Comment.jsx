@@ -47,7 +47,7 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
         {currentUserId && comment.user_id === currentUserId && (
           <button
             onClick={() => onDelete(comment.id, Boolean(comment.parent_id))}
-            className="p-1 text-stone-500 hover:text-stone-700"
+            className="p-1 text-stone-500 hover:text-stone-700 cursor-pointer"
             aria-label="Delete comment"
           >
             <Trash className="w-4 h-4" />
@@ -91,7 +91,7 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
                   {currentUserId && reply.user_id === currentUserId && (
                     <button
                       onClick={() => onDelete(reply.id, true)}
-                      className="ml-auto p-1 text-stone-500 hover:text-stone-700"
+                      className="ml-auto p-1 text-stone-500 hover:text-stone-700 cursor-pointer"
                       aria-label="Delete reply"
                     >
                       <Trash className="w-4 h-4" />
@@ -119,7 +119,7 @@ function CommentItem({ comment, replies = [], onReply, onDelete, currentUserId }
             <button
               onClick={handleReply}
               disabled={!replyText.trim()}
-              className={`${!replyText.trim() ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-stone-800 text-white hover:bg-stone-900'} h-9 px-4 text-xs rounded-full font-medium`}
+              className={`${!replyText.trim() ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-stone-800 text-white hover:bg-stone-900 cursor-pointer'} h-9 px-4 text-xs rounded-full font-medium`}
             >
               Reply
             </button>
@@ -149,7 +149,7 @@ function Toast({ message, onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="text-white hover:text-stone-200 transition-colors"
+          className="text-white hover:text-stone-200 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -478,7 +478,7 @@ function Comment({ postId }) {
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 !comment.trim() || isSubmitting
                   ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-                  : 'bg-stone-800 text-white hover:bg-stone-900'
+                  : 'bg-stone-800 text-white hover:bg-stone-900 cursor-pointer'
               }`}
             >
               {isSubmitting ? 'Sending...' : 'Send'}
@@ -504,7 +504,7 @@ function Comment({ postId }) {
       {/* Load More Comments */}
       {comments.length > 3 && (
         <div className="text-center mt-6">
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
             Load more comments
           </button>
         </div>

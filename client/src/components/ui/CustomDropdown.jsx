@@ -140,7 +140,7 @@ const CustomDropdown = ({
                 >
                   {selectedValue}
                   {!disabled && (
-                    <button className="ml-1 text-stone-500 hover:text-stone-700">
+                    <button className="ml-1 text-stone-500 hover:text-stone-700 cursor-pointer">
                       ✕
                     </button>
                   )}

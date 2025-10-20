@@ -13,7 +13,6 @@ function Signup() {
     password: ''
   });
   const [errors, setErrors] = useState({});
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -71,14 +70,15 @@ function Signup() {
       if (result?.error) {
         setErrors({ general: result.error });
       } else {
-        setShowSuccessModal(true);
+        // Redirect to login with success message
+        navigate('/login', { 
+          state: { 
+            message: 'Registration successful! Please log in to continue.',
+            type: 'success'
+          } 
+        });
       }
     }
-  };
-
-  const handleContinue = () => {
-    setShowSuccessModal(false);
-    navigate('/login');
   };
 
   return (
@@ -196,7 +196,7 @@ function Signup() {
               <button
                 type="submit"
                 disabled={state.loading}
-                className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {state.loading ? 'Creating account...' : 'Sign up'}
               </button>
@@ -213,33 +213,10 @@ function Signup() {
         </div>
       </div>
       <Footer />
-      
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-stone-200 rounded-lg p-8 max-w-md w-full mx-4 text-center">
-            {/* Success Icon */}
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            
-            {/* Success Message */}
-            <h2 className="text-2xl font-bold text-stone-900 mb-6">Registration success</h2>
-            
-            {/* Continue Button */}
-            <button
-              onClick={handleContinue}
-              className="w-full bg-stone-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-stone-800 transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
+Signup.displayName = 'Signup';
 
 export default Signup;

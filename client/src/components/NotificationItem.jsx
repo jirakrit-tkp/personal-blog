@@ -125,7 +125,7 @@ const NotificationItem = ({
               compact 
                 ? 'text-stone-400 hover:text-stone-700' 
                 : 'text-stone-400 hover:text-stone-700'
-            } transition-colors`}
+            } transition-colors cursor-pointer`}
             aria-label="Mark as read"
             title="Mark as read"
           >
@@ -145,7 +145,7 @@ const NotificationItem = ({
               compact 
                 ? 'text-stone-400 hover:text-red-500' 
                 : 'text-stone-400 hover:text-red-600'
-            } transition-colors`}
+            } transition-colors cursor-pointer`}
             aria-label="Delete notification"
             title="Delete"
           >
