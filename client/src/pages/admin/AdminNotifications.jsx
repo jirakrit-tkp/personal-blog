@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../context/authentication.jsx';
 import { AdminNavbar } from '../../components/admin';
 import NotificationItem from '../../components/NotificationItem';
 import CustomDropdown from '../../components/ui/CustomDropdown';
 
 const AdminNotifications = () => {
-  const { state } = useAuth();
-  const userId = state?.user?.id;
-  
-  const { notifications, markAsRead, deleteNotification, loading } = useNotifications(userId);
+  const { notifications, markAsRead, deleteNotification, notificationsLoading } = useAuth();
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
 
@@ -80,6 +76,7 @@ const AdminNotifications = () => {
                   notification={notification}
                   onClick={handleNotificationClick}
                   onDelete={deleteNotification}
+                  onMarkAsRead={markAsRead}
                   compact={false}
                 />
               ))}

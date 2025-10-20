@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AlignJustify, ChevronDown, User, RotateCcw, LogOut, PanelsTopLeft } from 'lucide-react';
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ const NavBar = () => {
   const { isAuthenticated, state, logout } = useAuth();
   const { user } = state;
   const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   NavBar.displayName = "NavBar";
 
@@ -105,13 +107,14 @@ const NavBar = () => {
       
       {/* Mobile Menu */}
       <div className="sm:hidden">
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => !open && setShowNotifications(false)}>
           <DropdownMenuTrigger asChild><AlignJustify /></DropdownMenuTrigger>
           <DropdownMenuContent className="w-[100vw] border-0 rounded-none bg-stone-50">
             <div className="space-y-3 p-4">
               {isAuthenticated ? (
-                // Authenticated mobile menu - show user info and menu items
+                // Authenticated mobile menu
                 <>
+                  {/* User info - always show */}
                   <div className="flex items-center gap-3 mb-4">
                     {user?.profilePic ? (
                       <img
@@ -128,38 +131,50 @@ const NavBar = () => {
                       {user?.username || user?.name || 'User'}
                     </span>
                     <div className="ml-auto">
-                      <NotificationBell />
+                      <NotificationBell onBellClick={() => setShowNotifications(!showNotifications)} inMobileMenu />
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-stone-300" />
-                  <DropdownMenuItem 
-                    className="hover:bg-stone-100 cursor-pointer"
-                    onClick={() => navigate(user?.role === 'admin' ? "/admin/profile" : "/profile")}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    <span className="text-stone-800">Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="hover:bg-stone-100 cursor-pointer"
-                    onClick={() => navigate(user?.role === 'admin' ? "/admin/reset-password" : "/reset-password")}
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    <span className="text-stone-800">Reset password</span>
-                  </DropdownMenuItem>
-                  {user?.role === 'admin' && (
-                    <DropdownMenuItem 
-                      className="hover:bg-stone-100 cursor-pointer"
-                      onClick={() => navigate("/admin")}
-                    >
-                      <PanelsTopLeft className="w-4 h-4 mr-2" />
-                      <span className="text-stone-800">Admin Panel</span>
-                    </DropdownMenuItem>
+                  
+                  {/* Toggle between menu and notifications */}
+                  {showNotifications ? (
+                    // Show notifications
+                    <div className="max-h-[60vh] overflow-y-auto">
+                      <NotificationBell showContentOnly />
+                    </div>
+                  ) : (
+                    // Show menu items
+                    <>
+                      <DropdownMenuItem 
+                        className="hover:bg-stone-100 cursor-pointer"
+                        onClick={() => navigate(user?.role === 'admin' ? "/admin/profile" : "/profile")}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        <span className="text-stone-800">Profile</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="hover:bg-stone-100 cursor-pointer"
+                        onClick={() => navigate(user?.role === 'admin' ? "/admin/reset-password" : "/reset-password")}
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        <span className="text-stone-800">Reset password</span>
+                      </DropdownMenuItem>
+                      {user?.role === 'admin' && (
+                        <DropdownMenuItem 
+                          className="hover:bg-stone-100 cursor-pointer"
+                          onClick={() => navigate("/admin")}
+                        >
+                          <PanelsTopLeft className="w-4 h-4 mr-2" />
+                          <span className="text-stone-800">Admin Panel</span>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator className="bg-stone-300" />
+                      <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50">
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </DropdownMenuItem>
+                    </>
                   )}
-                  <DropdownMenuSeparator className="bg-stone-300" />
-                  <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
                 </>
               ) : (
                 // Anonymous mobile menu

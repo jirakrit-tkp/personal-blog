@@ -1,12 +1,10 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../context/authentication.jsx';
 
 const AdminNotificationBell = () => {
-  const { state } = useAuth();
-  const { unreadCount } = useNotifications(state?.user?.id);
+  const { unreadCount } = useAuth();
   const navigate = useNavigate();
 
   const handleClick = () => {

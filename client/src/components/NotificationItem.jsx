@@ -1,11 +1,12 @@
 import React from 'react';
-import { User, X, Star } from 'lucide-react';
+import { User, X, Star, Eye } from 'lucide-react';
 import Rating from 'react-rating';
 
 const NotificationItem = ({ 
   notification, 
   onClick, 
   onDelete,
+  onMarkAsRead,
   showDeleteButton = true,
   compact = false 
 }) => {
@@ -51,13 +52,20 @@ const NotificationItem = ({
     }
   };
 
+  const handleMarkAsRead = (e) => {
+    e.stopPropagation();
+    if (onMarkAsRead) {
+      onMarkAsRead(notification.id);
+    }
+  };
+
   NotificationItem.displayName = "NotificationItem";
 
   return (
     <div
       onClick={() => onClick(notification)}
       className={`flex items-start gap-2 ${compact ? 'px-2 py-1.5' : 'px-6 py-4'} hover:bg-stone-${compact ? '100' : '100'} cursor-pointer transition-colors ${compact ? '' : ''} ${
-        !notification.read ? 'bg-stone-50' : ''
+        !notification.read ? 'bg-stone-50' : 'bg-stone-200'
       }`}
     >
       {/* Profile Picture */}
@@ -108,19 +116,47 @@ const NotificationItem = ({
         </p>
       </div>
 
-      {showDeleteButton && (
-        <button
-          onClick={handleDelete}
-          className={`${compact ? 'text-stone-400 hover:text-red-500' : 'text-stone-400 hover:text-red-600'} flex-shrink-0`}
-          aria-label="Delete notification"
-        >
-          {compact ? (
-            <X className="w-4 h-4" />
-          ) : (
-            <span className="text-sm">Delete</span>
-          )}
-        </button>
-      )}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Mark as read button - only show if unread */}
+        {!notification.read && onMarkAsRead && (
+          <button
+            onClick={handleMarkAsRead}
+            className={`${
+              compact 
+                ? 'text-stone-400 hover:text-stone-700' 
+                : 'text-stone-400 hover:text-stone-700'
+            } transition-colors`}
+            aria-label="Mark as read"
+            title="Mark as read"
+          >
+            {compact ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <span className="text-sm">Read</span>
+            )}
+          </button>
+        )}
+        
+        {/* Delete button */}
+        {showDeleteButton && (
+          <button
+            onClick={handleDelete}
+            className={`${
+              compact 
+                ? 'text-stone-400 hover:text-red-500' 
+                : 'text-stone-400 hover:text-red-600'
+            } transition-colors`}
+            aria-label="Delete notification"
+            title="Delete"
+          >
+            {compact ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <span className="text-sm">Delete</span>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
