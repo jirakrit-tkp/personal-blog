@@ -1,8 +1,9 @@
 import React from 'react';
-import { User, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
 import NavBar from '../../components/websection/NavBar';
+import Avatar from '../ui/Avatar';
 
 const MemberLayout = ({ children }) => {
   const { state, isAuthenticated } = useAuth();
@@ -39,17 +40,7 @@ const MemberLayout = ({ children }) => {
            <div className="p-6 lg:p-8 xl:p-10 lg:pl-12 xl:pl-16">
              {/* User Info */}
              <div className="relative flex items-center gap-3 mb-6">
-               {user?.profilePic ? (
-                 <img
-                   src={user.profilePic}
-                   alt="Profile"
-                   className="w-12 h-12 flex-shrink-0 rounded-full object-cover"
-                 />
-               ) : (
-                 <div className="w-12 h-12 flex-shrink-0 rounded-full bg-stone-200 flex items-center justify-center">
-                   <User className="w-6 h-6 text-stone-400" />
-                 </div>
-               )}
+               <Avatar src={user?.profilePic} alt="Profile" size="xl" />
                <div className="flex-1 min-w-0">
                  <h3 className="font-semibold text-xl lg:text-2xl text-stone-800 truncate">{user?.name || 'User'}</h3>
                  <p className="text-sm text-stone-400 truncate">@{user?.username || 'username'}</p>
@@ -111,18 +102,8 @@ const MemberLayout = ({ children }) => {
       <div className="lg:hidden bg-stone-50 min-h-screen">
         {/* Mobile Navigation */}
         <div className="bg-stone-50 px-4 py-3">
-          <div className="flex items-center gap-3">
-            {user?.profilePic ? (
-              <img
-                src={user.profilePic}
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center">
-                <User className="w-4 h-4 text-stone-400" />
-              </div>
-            )}
+           <div className="flex items-center gap-3">
+             <Avatar src={user?.profilePic} alt="Profile" size="md" />
             <div>
               <h3 className="font-semibold text-lg text-stone-800">{user?.name || 'User'}</h3>
               <p className="text-xs text-stone-400">@{user?.username || 'username'}</p>

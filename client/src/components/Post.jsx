@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Star, User } from 'lucide-react';
+import { Star } from 'lucide-react';
 import Rating from 'react-rating';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { getMarkdownHTML } from '../lib/markdownUtils';
 import Comment from './Comment';
 import { getGenreChipClasses } from '../lib/genreUtils';
+import Avatar from './ui/Avatar';
 
 function Post({ post, loading }) {
   const [publicAdmin, setPublicAdmin] = useState(null);
@@ -367,17 +368,11 @@ function Post({ post, loading }) {
               <div className="bg-stone-200 rounded-lg p-6 shadow-sm border border-stone-200">
                 {/* Author Header - Horizontal Layout */}
                 <div className="flex items-start gap-4 mb-4">
-                  {publicAdmin?.profile_pic ? (
-                    <img 
-                      className="w-12 h-12 rounded-full flex-shrink-0 object-cover" 
-                      src={publicAdmin.profile_pic} 
-                      alt={publicAdmin?.name ? `${publicAdmin?.name} profile picture` : "Author profile"}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
-                      <User className="w-6 h-6 text-stone-400" />
-                    </div>
-                  )}
+                  <Avatar 
+                    src={publicAdmin?.profile_pic} 
+                    alt={publicAdmin?.name ? `${publicAdmin?.name} profile picture` : "Author profile"}
+                    size="xl"
+                  />
                   <div className="flex-1">
                     <p className="text-sm text-stone-500 mb-1">Author</p>
                     <h4 className="font-semibold text-stone-900">{publicAdmin?.name || "Admin"}</h4>
@@ -417,8 +412,8 @@ function Post({ post, loading }) {
             </div>
             <p className="text-[10px] text-center text-stone-400 mb-4">Used for IMHb (in my head base) and Rotten Bananas.</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowRatingModal(false)} className="px-4 py-2 rounded-full bg-stone-200 text-stone-700">Cancel</button>
-              <button onClick={() => submitRating(pendingStars)} className="px-4 py-2 rounded-full bg-stone-800 text-white">Save</button>
+              <button onClick={() => setShowRatingModal(false)} className="px-4 py-2 rounded-full bg-stone-200 text-stone-700 hover:bg-stone-300 transition-colors cursor-pointer">Cancel</button>
+              <button onClick={() => submitRating(pendingStars)} className="px-4 py-2 rounded-full bg-stone-800 text-white hover:bg-stone-900 transition-colors cursor-pointer">Save</button>
             </div>
           </div>
         </div>

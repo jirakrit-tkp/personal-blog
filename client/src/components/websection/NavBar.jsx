@@ -11,6 +11,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authentication.jsx';
 import NotificationBell from '../NotificationBell';
+import Avatar from '../ui/Avatar';
 
 const NavBar = () => {
   const { isAuthenticated, state, logout } = useAuth();
@@ -37,17 +38,7 @@ const NavBar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
-                  {user?.profilePic ? (
-                    <img
-                      src={user.profilePic}
-                      alt="User avatar"
-                      className="w-9 h-9 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-stone-200 flex items-center justify-center">
-                      <User className="w-5 h-5 text-stone-400" />
-                    </div>
-                  )}
+                  <Avatar src={user?.profilePic} alt="User avatar" size="md" />
                   <span className="text-stone-800 font-medium">
                     {user?.username || user?.name || 'User'}
                   </span>
@@ -116,17 +107,7 @@ const NavBar = () => {
                 <>
                   {/* User info - always show */}
                   <div className="flex items-center gap-3 mb-4">
-                    {user?.profilePic ? (
-                      <img
-                        src={user.profilePic}
-                        alt="User avatar"
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
-                        <User className="w-6 h-6 text-stone-400" />
-                      </div>
-                    )}
+                    <Avatar src={user?.profilePic} alt="User avatar" size="lg" />
                     <span className="text-stone-800 font-medium">
                       {user?.username || user?.name || 'User'}
                     </span>

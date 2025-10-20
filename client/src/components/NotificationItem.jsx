@@ -1,6 +1,7 @@
 import React from 'react';
-import { User, X, Star, Eye } from 'lucide-react';
+import { X, Star, Eye } from 'lucide-react';
 import Rating from 'react-rating';
+import Avatar from './ui/Avatar';
 
 const NotificationItem = ({ 
   notification, 
@@ -69,17 +70,11 @@ const NotificationItem = ({
       }`}
     >
       {/* Profile Picture */}
-      <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-        {notification.actor_profile_pic ? (
-          <img 
-            src={notification.actor_profile_pic} 
-            alt={notification.actor_name || 'User'}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <User className="w-5 h-5 text-stone-400" />
-        )}
-      </div>
+      <Avatar 
+        src={notification.actor_profile_pic} 
+        alt={notification.actor_name || 'User'}
+        size="lg"
+      />
 
       <div className="flex-1 min-w-0">
         {/* Action message */}
