@@ -254,14 +254,14 @@ const Profile = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? 'Saving...' : 'Save'}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="w-full sm:w-auto px-6 py-2 bg-transparent text-stone-800 rounded-full hover:bg-stone-50 transition-colors"
+            className="w-full sm:w-auto px-6 py-2 bg-transparent text-stone-800 rounded-full hover:bg-stone-50 transition-colors disabled:cursor-not-allowed cursor-pointer"
             disabled={loading}
           >
             Cancel

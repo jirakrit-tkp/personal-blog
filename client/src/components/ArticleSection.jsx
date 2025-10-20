@@ -45,7 +45,7 @@ const ArticleSection = ({ shouldLoad = true }) => {
                                 <button
                                     type="button"
                                     onClick={() => scrollFilters(-200)}
-                                    className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-stone-200 rounded-full p-1 shadow-sm"
+                                    className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-stone-200 rounded-full p-1 shadow-sm cursor-pointer"
                                     aria-label="Scroll left"
                                 >
                                     <ChevronLeft className="w-4 h-4 text-stone-700" />
@@ -56,7 +56,7 @@ const ArticleSection = ({ shouldLoad = true }) => {
                                         <button
                                             key={`${filter}-${idx}`}
                                             onClick={() => updateFilter(filter)}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                                            className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 cursor-pointer ${
                                                 selectedFilter === filter
                                                     ? 'bg-stone-200 text-stone-800'
                                                     : 'text-stone-600 hover:text-stone-800'
@@ -70,7 +70,7 @@ const ArticleSection = ({ shouldLoad = true }) => {
                                 <button
                                     type="button"
                                     onClick={() => scrollFilters(200)}
-                                    className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-stone-200 rounded-full p-1 shadow-sm"
+                                    className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-stone-200 rounded-full p-1 shadow-sm cursor-pointer"
                                     aria-label="Scroll right"
                                 >
                                     <ChevronRight className="w-4 h-4 text-stone-700" />
@@ -149,7 +149,7 @@ const ArticleSection = ({ shouldLoad = true }) => {
                                 disabled={!hasMore || loadingMore}
                                 className={`px-8 py-3 text-base font-semibold rounded-lg transition-colors ${
                                     hasMore && !loadingMore
-                                        ? 'bg-stone-600 text-white hover:bg-stone-700'
+                                        ? 'bg-stone-600 text-white hover:bg-stone-700 cursor-pointer'
                                         : 'bg-stone-300 text-stone-500 cursor-not-allowed'
                                 }`}
                             >

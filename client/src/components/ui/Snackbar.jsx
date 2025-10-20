@@ -49,7 +49,7 @@ const Snackbar = ({ isOpen, onClose, message, type = 'success', duration = 4000 
         </div>
         <button
           onClick={onClose}
-          className="text-white hover:text-stone-200 transition-colors"
+          className="text-white hover:text-stone-200 transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>

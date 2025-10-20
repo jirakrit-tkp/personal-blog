@@ -36,7 +36,7 @@ const NavBar = () => {
             <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100">
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
                   {user?.profilePic ? (
                     <img
                       src={user.profilePic}
@@ -79,7 +79,7 @@ const NavBar = () => {
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator className="bg-stone-300" />
-                <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50">
+                <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50 cursor-pointer">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
@@ -108,7 +108,7 @@ const NavBar = () => {
       {/* Mobile Menu */}
       <div className="sm:hidden">
         <DropdownMenu onOpenChange={(open) => !open && setShowNotifications(false)}>
-          <DropdownMenuTrigger asChild><AlignJustify /></DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild><AlignJustify className="cursor-pointer" /></DropdownMenuTrigger>
           <DropdownMenuContent className="w-[100vw] border-0 rounded-none bg-stone-50">
             <div className="space-y-3 p-4">
               {isAuthenticated ? (
@@ -169,7 +169,7 @@ const NavBar = () => {
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator className="bg-stone-300" />
-                      <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50">
+                      <DropdownMenuItem onClick={logout} className="text-red-600 hover:bg-red-50 cursor-pointer">
                         <LogOut className="w-4 h-4 mr-2" />
                         Logout
                       </DropdownMenuItem>

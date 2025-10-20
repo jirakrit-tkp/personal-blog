@@ -64,7 +64,7 @@ const NotificationBell = ({ inMobileMenu = false, onBellClick = null, showConten
     return (
       <button
         onClick={onBellClick}
-        className="relative p-2 text-stone-600 hover:text-stone-800 transition-colors"
+        className="relative p-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer"
         aria-label="Notifications"
       >
         <Bell className="w-6 h-6" />
@@ -83,7 +83,7 @@ const NotificationBell = ({ inMobileMenu = false, onBellClick = null, showConten
       {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-stone-600 hover:text-stone-800 transition-colors"
+        className="relative p-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer"
         aria-label="Notifications"
       >
         <Bell className="w-6 h-6" />

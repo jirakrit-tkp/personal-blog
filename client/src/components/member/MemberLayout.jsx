@@ -34,77 +34,77 @@ const MemberLayout = ({ children }) => {
       
       {/* Desktop Layout */}
       <div className="hidden lg:flex min-h-screen">
-         {/* SIDEBAR - 30% width */}
-         <div className="w-[30%] bg-stone-50">
-           <div className="p-10 pl-50">
+         {/* SIDEBAR - flexible width with max constraint */}
+         <aside className="w-full lg:w-[30%] xl:w-[28%] bg-stone-50 flex-shrink-0">
+           <div className="p-6 lg:p-8 xl:p-10 lg:pl-12 xl:pl-16">
              {/* User Info */}
              <div className="relative flex items-center gap-3 mb-6">
                {user?.profilePic ? (
                  <img
                    src={user.profilePic}
                    alt="Profile"
-                   className="w-12 h-12 rounded-full object-cover"
+                   className="w-12 h-12 flex-shrink-0 rounded-full object-cover"
                  />
                ) : (
-                 <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center">
+                 <div className="w-12 h-12 flex-shrink-0 rounded-full bg-stone-200 flex items-center justify-center">
                    <User className="w-6 h-6 text-stone-400" />
                  </div>
                )}
-               <div className="flex-1">
-                 <h3 className="font-semibold text-2xl text-stone-800">{user?.name || 'User'}</h3>
-                 <p className="text-sm text-stone-400">@{user?.username || 'username'}</p>
+               <div className="flex-1 min-w-0">
+                 <h3 className="font-semibold text-xl lg:text-2xl text-stone-800 truncate">{user?.name || 'User'}</h3>
+                 <p className="text-sm text-stone-400 truncate">@{user?.username || 'username'}</p>
                </div>
                {/* Right-edge divider aligned to sidebar edge, limited to this row's height */}
-               <div className="absolute top-0 right-[-40px] h-full w-[2px] bg-stone-300"></div>
+               <div className="absolute top-0 -right-6 lg:-right-8 xl:-right-10 h-full w-[2px] bg-stone-300"></div>
              </div>
              
              {/* Navigation */}
              <nav className="space-y-4">
                <button 
                  onClick={() => navigate('/profile')}
-                 className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                 className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer ${
                    isActive('/profile') 
                      ? 'text-stone-800 font-bold'  
                      : 'text-stone-400'
                  }`}
                >
-                 <User className="w-4 h-4" />
+                 <User className="w-4 h-4 flex-shrink-0" />
                  <span className="text-sm">Profile</span>
                </button>
                <button 
                  onClick={() => navigate('/reset-password')}
-                 className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                 className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer ${
                    isActive('/reset-password') 
                      ? 'text-stone-800 font-bold' 
                      : 'text-stone-400'
                  }`}
                >
-                 <RotateCcw className="w-4 h-4" />
+                 <RotateCcw className="w-4 h-4 flex-shrink-0" />
                  <span className="text-sm">Reset password</span>
                </button>
              </nav>
            </div>
-         </div>
+         </aside>
 
-        {/* RIGHT SIDE - 70% width */}
-        <div className="w-[70%] bg-stone-50">
+        {/* RIGHT SIDE - flexible width */}
+        <main className="flex-1 bg-stone-50 min-w-0">
           {/* Page Title - ตรงกับ user */}
-          <div className="pt-11 pb-9">
+          <div className="pt-6 lg:pt-8 xl:pt-10 pb-9">
             <div className="flex items-center gap-3">
-              <div className="w-[2px] h-6"></div>
-              <h1 className="text-3xl font-semibold text-stone-800 capitalize">
+              <div className="w-[2px] h-6 flex-shrink-0"></div>
+              <h1 className="text-2xl lg:text-3xl font-semibold text-stone-800 capitalize truncate">
                 {location.pathname.split('/').pop() || 'Profile'}
               </h1>
             </div>
           </div>
           
           {/* Page Content */}
-          <div>
-            <div className="max-w-2xl">
+          <div className="pb-8">
+            <div className="max-w-2xl w-full">
               {children}
             </div>
           </div>
-        </div>
+        </main>
       </div>
 
       {/* Mobile Layout */}
@@ -137,7 +137,7 @@ const MemberLayout = ({ children }) => {
           <nav className="flex gap-6 mt-4">
             <button 
               onClick={() => navigate('/profile')}
-              className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors cursor-pointer ${
                 isActive('/profile') 
                   ? 'text-stone-800 font-bold border-b-2 border-stone-800'  
                   : 'text-stone-400'
@@ -148,7 +148,7 @@ const MemberLayout = ({ children }) => {
             </button>
             <button 
               onClick={() => navigate('/reset-password')}
-              className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors cursor-pointer ${
                 isActive('/reset-password') 
                   ? 'text-stone-800 font-bold border-b-2 border-stone-800' 
                   : 'text-stone-400'

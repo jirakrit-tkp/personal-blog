@@ -289,13 +289,13 @@ const ArticleManagement = () => {
                 {selectedArticles.length} article(s) selected
               </span>
               <div className="flex gap-2">
-                <button className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full hover:bg-green-200">
+                <button className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full hover:bg-green-200 cursor-pointer">
                   Publish
                 </button>
-                <button className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full hover:bg-yellow-200">
+                <button className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full hover:bg-yellow-200 cursor-pointer">
                   Move to Draft
                 </button>
-                <button className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full hover:bg-red-200">
+                <button className="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full hover:bg-red-200 cursor-pointer">
                   Delete
                 </button>
               </div>

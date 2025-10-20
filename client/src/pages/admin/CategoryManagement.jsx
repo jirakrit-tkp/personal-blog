@@ -141,7 +141,7 @@ const CategoryManagement = () => {
         actions={
           <button
             onClick={handleCreateClick}
-            className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
+            className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors cursor-pointer"
           >
             + Create Genre
           </button>

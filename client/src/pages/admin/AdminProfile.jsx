@@ -146,7 +146,7 @@ const AdminProfile = () => {
         actions={
           !isEditing ? (
             <button 
-              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors"
+              className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors cursor-pointer"
               onClick={() => setIsEditing(true)}
             >
               Edit Profile
@@ -154,13 +154,13 @@ const AdminProfile = () => {
           ) : (
             <>
               <button 
-                className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors"
+                className="px-6 py-2 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors cursor-pointer"
                 onClick={handleCancel}
               >
                 Cancel
               </button>
               <button 
-                className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 onClick={handleSave}
                 disabled={isSaving}
               >
