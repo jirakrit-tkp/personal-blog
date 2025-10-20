@@ -10,7 +10,7 @@ import Snackbar from '../../components/ui/Snackbar';
 
 const ArticleManagement = () => {
   const navigate = useNavigate();
-  const { fetchPosts, loading } = useApi();
+  const { fetchAdminPosts, loading } = useApi();
   const [articles, setArticles] = useState([]);
   const [selectedArticles, setSelectedArticles] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,11 +39,11 @@ const ArticleManagement = () => {
     fetchGenres();
   }, []);
 
-  // Fetch articles from database
+  // Fetch articles from database (including drafts)
   useEffect(() => {
     const loadArticles = async () => {
       try {
-        const result = await fetchPosts({
+        const result = await fetchAdminPosts({
           page: 1,
           limit: 50
         });

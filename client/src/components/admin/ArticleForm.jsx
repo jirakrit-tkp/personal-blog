@@ -155,28 +155,36 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
   const handleSubmit = async (publish = false) => {
     const errors = {};
     
-    if (!formData.title.trim()) {
-      errors.title = 'Title is required';
-    }
-    
-    if (!formData.description.trim()) {
-      errors.description = 'Introduction is required';
-    }
-    
-    if (!formData.content.trim()) {
-      errors.content = 'Content is required';
-    }
+    // Only validate required fields when publishing
+    if (publish) {
+      if (!formData.title.trim()) {
+        errors.title = 'Title is required';
+      }
+      
+      if (!formData.description.trim()) {
+        errors.description = 'Introduction is required';
+      }
+      
+      if (!formData.content.trim()) {
+        errors.content = 'Content is required';
+      }
 
-    if (formData.genre_ids.length === 0) {
-      errors.genres = 'At least one genre is required';
-    }
+      if (formData.genre_ids.length === 0) {
+        errors.genres = 'At least one genre is required';
+      }
 
-    if (mode === 'create' && !selectedFile) {
-      errors.image = 'Thumbnail image is required';
-    }
+      if (mode === 'create' && !selectedFile && !formData.image) {
+        errors.image = 'Thumbnail image is required';
+      }
 
-    if (!formData.imhb_score || formData.imhb_score === 0) {
-      errors.rating = 'IMHb rating is required';
+      if (!formData.imhb_score || formData.imhb_score === 0) {
+        errors.rating = 'IMHb rating is required';
+      }
+    } else {
+      // For draft, only require title
+      if (!formData.title.trim()) {
+        errors.title = 'Title is required (even for draft)';
+      }
     }
 
     setValidationErrors(errors);
@@ -184,7 +192,7 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
     if (Object.keys(errors).length > 0) {
       setSnackbar({
         isOpen: true,
-        message: 'Please fill in all required fields',
+        message: publish ? 'Please fill in all required fields' : 'Title is required',
         type: 'error'
       });
       return;
@@ -237,11 +245,13 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
         if (response.data.success) {
           const newPostId = response.data.data.id;
           
-          // สร้าง rating record สำหรับ admin
-          await axios.post(`${apiBase}/posts/${newPostId}/ratings`, {
-            rating: formData.imhb_score,
-            user_id: user?.id
-          });
+          // สร้าง rating record สำหรับ admin (ถ้ามี)
+          if (formData.imhb_score && formData.imhb_score > 0) {
+            await axios.post(`${apiBase}/posts/${newPostId}/ratings`, {
+              rating: formData.imhb_score,
+              user_id: user?.id
+            });
+          }
 
           setSnackbar({
             isOpen: true,
@@ -264,11 +274,13 @@ const ArticleForm = ({ mode = 'create', postId = null }) => {
         const response = await axios.put(`${apiBase}/posts/${postId}`, submitData);
 
         if (response.data.success) {
-          // อัปเดต rating ของ admin
-          await axios.post(`${apiBase}/posts/${postId}/ratings`, {
-            rating: formData.imhb_score,
-            user_id: user?.id
-          });
+          // อัปเดต rating ของ admin (ถ้ามี)
+          if (formData.imhb_score && formData.imhb_score > 0) {
+            await axios.post(`${apiBase}/posts/${postId}/ratings`, {
+              rating: formData.imhb_score,
+              user_id: user?.id
+            });
+          }
 
           setSnackbar({
             isOpen: true,
