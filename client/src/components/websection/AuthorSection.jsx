@@ -36,8 +36,8 @@ const AuthorSection = ({ onLoadComplete }) => {
   AuthorSection.displayName = "AuthorSection";
 
   return (
-    <section className="bg-stone-50 py-16 px-8">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 justify-center items-center">
+    <section className="bg-stone-50 py-16 px-0 md:px-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-0 flex flex-col lg:flex-row gap-12 justify-center items-center">
         {loading || !publicAdmin ? (
           <>
             {/* Left skeleton (match article style) */}

@@ -102,7 +102,7 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
   };
 
   return (
-    <div className="relative w-full max-w-lg">
+    <div className="relative w-full">
       {/* Search Input */}
       <div className="relative">
         <input
@@ -112,7 +112,7 @@ function Search({ onSearch, onSelectPost, selectedFilter }) {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Search articles..."
-          className="w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 pr-12 bg-white border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
         />
         <button
           onClick={handleSearch}

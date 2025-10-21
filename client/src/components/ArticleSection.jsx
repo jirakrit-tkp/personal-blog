@@ -29,8 +29,8 @@ const ArticleSection = ({ shouldLoad = true }) => {
     } = useArticles(shouldLoad);
     
     return (
-        <section className="py-12 px-8">
-                <div className="max-w-7xl mx-auto">
+        <section className="py-12 px-0 md:px-8">
+                <div className="max-w-7xl mx-auto px-4 md:px-0">
                     {/* Heading */}
                     <h2 className="text-3xl font-bold text-stone-900 mb-8">
                         Latest articles
@@ -89,7 +89,7 @@ const ArticleSection = ({ shouldLoad = true }) => {
                     </div>
 
                     {/* Mobile Layout */}
-                    <div className="lg:hidden bg-stone-100 rounded-lg p-4 mb-8">
+                    <div className="lg:hidden bg-stone-100 -mx-4 md:mx-0 md:rounded-lg p-4 mb-8">
                         <div className="space-y-4">
                             {/* Search Input */}
                             <div className="w-full">
