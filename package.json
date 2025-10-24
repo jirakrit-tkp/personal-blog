@@ -1,7 +1,7 @@
 {
-  "name": "jt-code-crumbs",
+  "name": "personal-blog",
   "version": "1.0.0",
-  "description": "JT Code Crumbs - Full Stack Application",
+  "description": "Personal Blog - Full Stack Application",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
